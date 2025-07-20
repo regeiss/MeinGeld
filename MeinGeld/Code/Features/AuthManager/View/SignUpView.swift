@@ -14,43 +14,153 @@ struct SignUpView: View {
     @State private var confirmPassword = ""
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    @State private var isPasswordVisible = false
+    @State private var isConfirmPasswordVisible = false
+    @State private var agreedToTerms = false
     
     private let authManager = AuthenticationManager.shared
     
     var body: some View {
-        VStack(spacing: 16) {
-            TextField("Nome completo", text: $name)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.name)
-            
-            TextField("Email", text: $email)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.emailAddress)
-                .autocapitalization(.none)
-                .keyboardType(.emailAddress)
-            
-            SecureField("Senha", text: $password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.newPassword)
-            
-            SecureField("Confirmar senha", text: $confirmPassword)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.newPassword)
-            
-            Button(action: signUp) {
-                if authManager.isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                } else {
-                    Text("Cadastrar")
-                        .fontWeight(.semibold)
+        ScrollView {
+            VStack(spacing: 20) {
+                // Name Field
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Nome completo")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    TextField("Digite seu nome", text: $name)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .textContentType(.name)
+                }
+                
+                // Email Field
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Email")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    TextField("Digite seu email", text: $email)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .textContentType(.emailAddress)
+                        .autocapitalization(.none)
+                        .keyboardType(.emailAddress)
+                        .autocorrectionDisabled()
+                }
+                
+                // Password Field
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Senha")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    HStack {
+                        if isPasswordVisible {
+                            TextField("Mínimo 6 caracteres", text: $password)
+                                .textContentType(.newPassword)
+                        } else {
+                            SecureField("Mínimo 6 caracteres", text: $password)
+                                .textContentType(.newPassword)
+                        }
+                        
+                        Button(action: { isPasswordVisible.toggle() }) {
+                            Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    
+                    // Password strength indicator
+                    PasswordStrengthIndicator(password: password)
+                }
+                
+                // Confirm Password Field
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Confirmar senha")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    HStack {
+                        if isConfirmPasswordVisible {
+                            TextField("Confirme sua senha", text: $confirmPassword)
+                                .textContentType(.newPassword)
+                        } else {
+                            SecureField("Confirme sua senha", text: $confirmPassword)
+                                .textContentType(.newPassword)
+                        }
+                        
+                        Button(action: { isConfirmPasswordVisible.toggle() }) {
+                            Image(systemName: isConfirmPasswordVisible ? "eye.slash" : "eye")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    
+                    if !confirmPassword.isEmpty && password != confirmPassword {
+                        Text("Senhas não coincidem")
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
+                }
+                
+                // Terms and Conditions
+                HStack {
+                    Button(action: { agreedToTerms.toggle() }) {
+                        Image(systemName: agreedToTerms ? "checkmark.square.fill" : "square")
+                            .foregroundColor(agreedToTerms ? .blue : .gray)
+                    }
+                    
+                    Text("Concordo com os ")
+                        .font(.caption)
+                    + Text("Termos de Uso")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .underline()
+                    + Text(" e ")
+                        .font(.caption)
+                    + Text("Política de Privacidade")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                        .underline()
+                    
+                    Spacer()
+                }
+                
+                // Sign Up Button
+                Button(action: signUp) {
+                    HStack {
+                        if authManager.isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.8)
+                        } else {
+                            Text("Criar Conta")
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .background(isFormValid ? Color.green : Color.gray)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                }
+                .disabled(!isFormValid || authManager.isLoading)
+                
+                // Success Message
+                Text("Após criar sua conta, você receberá um email de verificação.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                
+                // Error Message
+                if let errorMessage = authManager.errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: 50)
-            .background(Color.green)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            .disabled(!isFormValid || authManager.isLoading)
+            .padding()
         }
         .alert("Erro", isPresented: $showingAlert) {
             Button("OK") { }
@@ -62,9 +172,11 @@ struct SignUpView: View {
     private var isFormValid: Bool {
         !name.isEmpty &&
         !email.isEmpty &&
+        email.contains("@") &&
         !password.isEmpty &&
         password == confirmPassword &&
-        password.count >= 6
+        password.count >= 6 &&
+        agreedToTerms
     }
     
     private func signUp() {
@@ -72,8 +184,8 @@ struct SignUpView: View {
             do {
                 try await authManager.signUp(name: name, email: email, password: password)
             } catch {
-                alertMessage = error.localizedDescription
-                showingAlert = true
+                // O erro já é tratado no AuthManager
+                print("Sign up error handled by AuthManager")
             }
         }
     }

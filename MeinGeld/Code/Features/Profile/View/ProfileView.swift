@@ -61,7 +61,11 @@ struct ProfileView: View {
                     NavigationLink(destination: SettingsView()) {
                         Label("Configurações", systemImage: "gearshape.fill")
                     }
-                    
+                  
+                    NavigationLink(destination: AccountSecurityView()) {
+                        Label("Segurança da Conta", systemImage: "shield.fill")
+                    }
+                  
                     NavigationLink(destination: Text("Relatórios em breve")) {
                         Label("Relatórios", systemImage: "chart.bar.fill")
                     }

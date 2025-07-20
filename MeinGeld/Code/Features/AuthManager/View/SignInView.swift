@@ -8,45 +8,104 @@
 import SwiftUI
 
 struct SignInView: View {
-    @State private var email = "demo@exemplo.com"
-    @State private var password = "123456"
+    @State private var email = ""
+    @State private var password = ""
     @State private var showingAlert = false
+    @State private var showingForgotPassword = false
     @State private var alertMessage = ""
+    @State private var isPasswordVisible = false
     
     private let authManager = AuthenticationManager.shared
     
     var body: some View {
-        VStack(spacing: 16) {
-            TextField("Email", text: $email)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.emailAddress)
-                .autocapitalization(.none)
-                .keyboardType(.emailAddress)
-            
-            SecureField("Senha", text: $password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .textContentType(.password)
-            
-            Button(action: signIn) {
-                if authManager.isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                } else {
-                    Text("Entrar")
-                        .fontWeight(.semibold)
-                }
+        VStack(spacing: 20) {
+            // Email Field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Email")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                TextField("Digite seu email", text: $email)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .textContentType(.emailAddress)
+                    .autocapitalization(.none)
+                    .keyboardType(.emailAddress)
+                    .autocorrectionDisabled()
             }
-            .frame(maxWidth: .infinity, minHeight: 50)
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            .disabled(email.isEmpty || password.isEmpty || authManager.isLoading)
+            
+            // Password Field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Senha")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                HStack {
+                    if isPasswordVisible {
+                        TextField("Digite sua senha", text: $password)
+                            .textContentType(.password)
+                    } else {
+                        SecureField("Digite sua senha", text: $password)
+                            .textContentType(.password)
+                    }
+                    
+                    Button(action: { isPasswordVisible.toggle() }) {
+                        Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+            }
+            
+            // Forgot Password Link
+            HStack {
+                Spacer()
+                Button("Esqueceu a senha?") {
+                    showingForgotPassword = true
+                }
+                .font(.caption)
+                .foregroundColor(.blue)
+            }
+            
+            // Sign In Button
+            Button(action: signIn) {
+                HStack {
+                    if authManager.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                    } else {
+                        Text("Entrar")
+                            .fontWeight(.semibold)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 50)
+                .background(isFormValid ? Color.blue : Color.gray)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            }
+            .disabled(!isFormValid || authManager.isLoading)
+            
+            // Error Message
+            if let errorMessage = authManager.errorMessage {
+                Text(errorMessage)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
         }
         .alert("Erro", isPresented: $showingAlert) {
             Button("OK") { }
         } message: {
             Text(alertMessage)
         }
+        .sheet(isPresented: $showingForgotPassword) {
+            ForgotPasswordView()
+        }
+    }
+    
+    private var isFormValid: Bool {
+        !email.isEmpty && !password.isEmpty && email.contains("@")
     }
     
     private func signIn() {
@@ -54,8 +113,8 @@ struct SignInView: View {
             do {
                 try await authManager.signIn(email: email, password: password)
             } catch {
-                alertMessage = error.localizedDescription
-                showingAlert = true
+                // O erro já é tratado no AuthManager
+                print("Sign in error handled by AuthManager")
             }
         }
     }

@@ -28,12 +28,26 @@ struct SettingsView: View {
             Section("Moeda") {
                 HStack {
                     Text("Moeda preferida")
-                    Spacer()
-                    Text("Real (BRL)")
+                  Spacer()
+                  Text("Real (BRL)")
                         .foregroundColor(.secondary)
                 }
             }
-            
+          
+          Section("Autenticação") {
+            NavigationLink(destination: AccountSecurityView()) {
+                  Label("Configurações de Segurança", systemImage: "key.fill")
+              }
+              
+              if BiometricAuthService().isAvailable {
+                  HStack {
+                      Label("Autenticação Biométrica", systemImage: "touchid")
+                      Spacer()
+                      Toggle("", isOn: .constant(UserDefaults.standard.bool(forKey: "biometric_enabled")))
+                          .disabled(true) // Link to settings
+                  }
+              }
+          }
             #if DEBUG
             Section("Debug (Apenas em desenvolvimento)") {
                 Button("Testar Crash Não-Fatal") {
