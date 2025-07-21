@@ -5,185 +5,140 @@
 //  Created by Roberto Edgar Geiss on 19/07/25.
 //
 
+import Firebase
 import Foundation
 import LocalAuthentication
 import SwiftUI
-import Firebase
+
+//
+//  AccountSecurityView.swift
+//  MeinGeld
+//
+//  Created by Roberto Edgar Geiss
+//
 
 struct AccountSecurityView: View {
-  @StateObject private var biometricService = BiometricAuthService()
-  @StateObject private var emailService = EmailVerificationService(authManager: AuthenticationManager, firebaseService: any FirebaseServiceProtocol as! FirebaseServiceProtocol)
-  @State private var biometricEnabled = UserDefaults.standard.bool(
-    forKey: "biometric_enabled"
-  )
-  @State private var showingDeleteConfirmation = false
-  @State private var isDeleting = false
+  @Environment(\.dismiss) private var dismiss
+  @State private var currentPassword = ""
+  @State private var newPassword = ""
+  @State private var confirmPassword = ""
+  @State private var showingAlert = false
+  @State private var alertMessage = ""
+  @State private var isLoading = false
 
   private let authManager = AuthenticationManager.shared
+  private let firebaseService = FirebaseService.shared
 
   var body: some View {
-    List {
-      // Email Verification Section
-      Section("Verificação de Email") {
-        HStack {
-          Image(
-            systemName: emailService.isEmailVerified
-              ? "checkmark.circle.fill" : "exclamationmark.circle.fill"
-          )
-          .foregroundColor(emailService.isEmailVerified ? .green : .orange)
+    NavigationView {
+      Form {
+        Section("Alterar Senha") {
+          SecureField("Senha atual", text: $currentPassword)
+            .textContentType(.password)
 
-          VStack(alignment: .leading) {
-            Text(
-              emailService.isEmailVerified
-                ? "Email verificado" : "Email não verificado"
-            )
-            .fontWeight(.medium)
+          SecureField("Nova senha", text: $newPassword)
+            .textContentType(.newPassword)
 
-            if !emailService.isEmailVerified {
-              Text("Verifique seu email para maior segurança")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
+          SecureField("Confirmar nova senha", text: $confirmPassword)
+            .textContentType(.newPassword)
+        }
+
+        Section("Autenticação") {
+          NavigationLink(destination: Text("Autenticação em dois fatores")) {
+            Label("Autenticação em 2 fatores", systemImage: "lock.shield")
           }
 
-          Spacer()
+          NavigationLink(destination: Text("Dispositivos conectados")) {
+            Label("Dispositivos conectados", systemImage: "iphone")
+          }
+        }
 
-          if !emailService.isEmailVerified {
-            Button(action: resendVerificationEmail) {
-              if emailService.isCheckingVerification {
-                ProgressView()
-                  .scaleEffect(0.8)
-              } else if emailService.resendCooldown > 0 {
-                Text("\(Int(emailService.resendCooldown))s")
-                  .font(.caption)
-                  .foregroundColor(.secondary)
-              } else {
-                Text("Reenviar")
-                  .font(.caption)
-                  .foregroundColor(.blue)
-              }
-            }
-            .disabled(
-              emailService.resendCooldown > 0
-                || emailService.isCheckingVerification
+        Section("Privacidade") {
+          NavigationLink(destination: Text("Dados pessoais")) {
+            Label(
+              "Gerenciar dados pessoais",
+              systemImage: "person.text.rectangle"
             )
           }
+
+          Button(action: exportData) {
+            Label("Exportar dados", systemImage: "square.and.arrow.up")
+          }
+        }
+
+        Section {
+          Button("Salvar alterações") {
+            changePassword()
+          }
+          .disabled(!isFormValid || isLoading)
+          .frame(maxWidth: .infinity)
+          .foregroundColor(isFormValid ? .blue : .gray)
         }
       }
-
-      // Biometric Authentication Section
-      if biometricService.isAvailable {
-        Section("Autenticação Biométrica") {
-          HStack {
-            Image(systemName: biometricIconName)
-              .foregroundColor(.blue)
-
-            VStack(alignment: .leading) {
-              Text("Usar \(biometricTypeName)")
-                .fontWeight(.medium)
-
-              Text("Acesso rápido e seguro ao app")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            Toggle("", isOn: $biometricEnabled)
-              .onChange(of: biometricEnabled) { _, newValue in
-                UserDefaults.standard.set(newValue, forKey: "biometric_enabled")
-              }
+      .navigationTitle("Segurança da Conta")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .navigationBarLeading) {
+          Button("Cancelar") {
+            dismiss()
           }
         }
       }
-
-      // Password Management Section
-      Section("Gerenciar Senha") {
-        NavigationLink(destination: ChangePasswordView()) {
-          Label("Alterar Senha", systemImage: "key.fill")
-        }
-
-        Button(action: sendPasswordReset) {
-          Label("Enviar Reset de Senha", systemImage: "envelope.fill")
-            .foregroundColor(.blue)
-        }
-      }
-
-      // Danger Zone
-      Section("Zona de Perigo") {
-        Button(action: { showingDeleteConfirmation = true }) {
-          Label("Excluir Conta", systemImage: "trash.fill")
-            .foregroundColor(.red)
-        }
-      }
-    }
-    .navigationTitle("Segurança da Conta")
-    .navigationBarTitleDisplayMode(.inline)
-    .refreshable {
-      emailService.checkEmailVerification()
-    }
-    .alert("Confirmar Exclusão", isPresented: $showingDeleteConfirmation) {
-      Button("Cancelar", role: .cancel) {}
-      Button("Excluir", role: .destructive) {
-        deleteAccount()
-      }
-    } message: {
-      Text(
-        "Esta ação não pode ser desfeita. Todos os seus dados serão permanentemente removidos."
-      )
-    }
-  }
-
-  private var biometricIconName: String {
-    switch biometricService.biometricType {
-    case .faceID: return "faceid"
-    case .touchID: return "touchid"
-    case .opticID: return "opticid"
-    default: return "person.badge.key.fill"
-    }
-  }
-
-  private var biometricTypeName: String {
-    switch biometricService.biometricType {
-    case .faceID: return "Face ID"
-    case .touchID: return "Touch ID"
-    case .opticID: return "Optic ID"
-    default: return "Biometria"
-    }
-  }
-
-  private func resendVerificationEmail() {
-    Task {
-      do {
-        try await emailService.resendVerificationEmail()
-      } catch {
-        print("Failed to resend verification email: \(error)")
+      .alert("Erro", isPresented: $showingAlert) {
+        Button("OK") {}
+      } message: {
+        Text(alertMessage)
       }
     }
   }
 
-  private func sendPasswordReset() {
-    guard let email = authManager.currentUser?.email else { return }
+  private var isFormValid: Bool {
+    !currentPassword.isEmpty && !newPassword.isEmpty
+      && newPassword == confirmPassword && newPassword.count >= 6
+  }
+
+  private func changePassword() {
+    guard isFormValid else {
+      showAlert("Por favor, preencha todos os campos corretamente")
+      return
+    }
+
+    isLoading = true
 
     Task {
       do {
-        try await authManager.resetPassword(email: email)
+        // Aqui você implementaria a lógica de mudança de senha
+        // try await authManager.changePassword(current: currentPassword, new: newPassword)
+
+        // Analytics
+        firebaseService.logEvent(.passwordChanged)
+
+        await MainActor.run {
+          isLoading = false
+          dismiss()
+        }
       } catch {
-        print("Failed to send password reset: \(error)")
+        await MainActor.run {
+          isLoading = false
+          showAlert(error.localizedDescription)
+        }
       }
     }
   }
 
-  private func deleteAccount() {
-    isDeleting = true
-
-    Task {
-      do {
-        try await authManager.deleteAccount()
-      } catch {
-        print("Failed to delete account: \(error)")
-        isDeleting = false
-      }
-    }
+  private func exportData() {
+    firebaseService.logEvent(.dataExportRequested)
+    // Implementar exportação de dados
   }
+
+  private func showAlert(_ message: String) {
+    alertMessage = message
+    showingAlert = true
+  }
+}
+
+// MARK: - Analytics Extensions
+extension AnalyticsEvent {
+//  static let passwordChanged = AnalyticsEvent(name: "password_changed")
+  static let dataExportRequested = AnalyticsEvent(name: "data_export_requested")
 }
