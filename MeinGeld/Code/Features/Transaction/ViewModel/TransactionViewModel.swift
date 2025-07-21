@@ -5,109 +5,196 @@
 //  Created by Roberto Edgar Geiss on 16/07/25.
 //
 
-import SwiftData
 import Foundation
+import SwiftData
 
 @MainActor
 @Observable
 final class TransactionViewModel {
-    private let errorManager: ErrorManagerProtocol
-    private var modelContext: ModelContext?
-    
-    var transactions: [Transaction] = []
-    var isLoading = false
-    var errorMessage: String?
-    
-    init(errorManager: ErrorManagerProtocol = ErrorManager.shared) {
-        self.errorManager = errorManager
-    }
-    
-    func setModelContext(_ context: ModelContext) {
-        self.modelContext = context
-        loadTransactions()
-    }
-    
-    func loadTransactions() {
-        guard let context = modelContext else {
-            errorManager.logWarning("ModelContext não definido", context: "TransactionViewModel.loadTransactions")
-            return
-        }
-        
-        isLoading = true
-        errorMessage = nil
-        
-        do {
-            let descriptor = FetchDescriptor<Transaction>(
-                sortBy: [SortDescriptor(\.date, order: .reverse)]
-            )
-            transactions = try context.fetch(descriptor)
-            
-            errorManager.logInfo("Transações carregadas: \(transactions.count)", context: "TransactionViewModel.loadTransactions")
-        } catch {
-            errorManager.handle(error, context: "TransactionViewModel.loadTransactions")
-            errorMessage = "Erro ao carregar transações"
-        }
-        
-        isLoading = false
-    }
-    
-    func addTransaction(
-        amount: Decimal,
-        description: String,
-        category: TransactionCategory,
-        type: TransactionType,
-        account: Account?
-    ) {
-        guard let context = modelContext else {
-            errorManager.logWarning("ModelContext não definido", context: "TransactionViewModel.addTransaction")
-            return
-        }
-        
-        guard amount > 0 else {
-            errorMessage = "Valor deve ser maior que zero"
-            return
-        }
-        
-        do {
-            let finalAmount = type == .expense ? -amount : amount
-            let transaction = Transaction(
-                amount: finalAmount,
-                description: description,
-                date: Date(),
-                category: category,
-                type: type,
-                account: account
-            )
-            
-            context.insert(transaction)
-            try context.save()
-            
-            loadTransactions()
-            
-            errorManager.logInfo("Transação adicionada: \(description)", context: "TransactionViewModel.addTransaction")
-        } catch {
-            errorManager.handle(error, context: "TransactionViewModel.addTransaction")
-            errorMessage = "Erro ao adicionar transação"
-        }
-    }
-    
-    func deleteTransaction(_ transaction: Transaction) {
-        guard let context = modelContext else {
-            errorManager.logWarning("ModelContext não definido", context: "TransactionViewModel.deleteTransaction")
-            return
-        }
-        
-        do {
-            context.delete(transaction)
-            try context.save()
-            
-            loadTransactions()
-            
-            errorManager.logInfo("Transação deletada", context: "TransactionViewModel.deleteTransaction")
-        } catch {
-            errorManager.handle(error, context: "TransactionViewModel.deleteTransaction")
-            errorMessage = "Erro ao deletar transação"
-        }
-    }
-}
 
+  // MARK: - Published Properties
+  var transactions: [Transaction] = []
+  var isLoading = false
+  var isLoadingMore = false
+  var errorMessage: String?
+  var hasMoreData = true
+
+  // MARK: - Private Properties
+  private let dataService: DataServiceProtocol
+  private let authManager: any AuthenticationManagerProtocol
+  private let firebaseService: FirebaseServiceProtocol
+
+  private var currentPage = 0
+  private let pageSize = 50
+
+  // MARK: - Initialization
+  init(
+    dataService: DataServiceProtocol,
+    authManager: any AuthenticationManagerProtocol,
+    firebaseService: FirebaseServiceProtocol = FirebaseService.shared
+  ) {
+    self.dataService = dataService
+    self.authManager = authManager
+    self.firebaseService = firebaseService
+  }
+
+  // MARK: - Public Methods
+  func loadTransactions() async {
+    guard let user = authManager.currentUser else {
+      errorMessage = "Usuário não autenticado"
+      return
+    }
+
+    isLoading = true
+    errorMessage = nil
+    currentPage = 0
+
+    do {
+      let fetchedTransactions = try await dataService.fetchTransactions(
+        for: user,
+        limit: pageSize,
+        offset: 0
+      )
+
+      transactions = fetchedTransactions
+      hasMoreData = fetchedTransactions.count == pageSize
+
+      firebaseService.logEvent(.transactionsViewed)
+
+    } catch {
+      errorMessage = error.localizedDescription
+      transactions = []
+    }
+
+    isLoading = false
+  }
+
+  func loadMoreTransactions() async {
+    guard let user = authManager.currentUser,
+      hasMoreData,
+      !isLoadingMore
+    else { return }
+
+    isLoadingMore = true
+    currentPage += 1
+
+    do {
+      let fetchedTransactions = try await dataService.fetchTransactions(
+        for: user,
+        limit: pageSize,
+        offset: currentPage * pageSize
+      )
+
+      transactions.append(contentsOf: fetchedTransactions)
+      hasMoreData = fetchedTransactions.count == pageSize
+
+    } catch {
+      errorMessage = error.localizedDescription
+      currentPage -= 1  // Revert page increment
+    }
+
+    isLoadingMore = false
+  }
+
+  func addTransaction(
+    amount: Decimal,
+    description: String,
+    category: TransactionCategory,
+    type: TransactionType,
+    account: Account?
+  ) async {
+    guard !description.isEmpty, amount > 0 else {
+      errorMessage = "Dados inválidos"
+      return
+    }
+
+    isLoading = true
+    errorMessage = nil
+
+    do {
+      let finalAmount = type == .expense ? -amount : amount
+      let transaction = Transaction(
+        amount: finalAmount,
+        description: description,
+        date: Date(),
+        category: category,
+        type: type,
+        account: account
+      )
+
+      try await dataService.createTransaction(transaction)
+
+      // Refresh transactions to show the new one
+      await loadTransactions()
+
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+
+    isLoading = false
+  }
+
+  func deleteTransaction(_ transaction: Transaction) async {
+    isLoading = true
+    errorMessage = nil
+
+    do {
+      try await dataService.deleteTransaction(transaction)
+
+      // Remove from local array
+      transactions.removeAll { $0.id == transaction.id }
+
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+
+    isLoading = false
+  }
+
+  func filterTransactions(by category: TransactionCategory) async {
+    guard let user = authManager.currentUser else {
+      errorMessage = "Usuário não autenticado"
+      return
+    }
+
+    isLoading = true
+    errorMessage = nil
+
+    do {
+      transactions = try await dataService.fetchTransactionsByCategory(
+        category,
+        for: user
+      )
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+
+    isLoading = false
+  }
+
+  func filterTransactions(from startDate: Date, to endDate: Date) async {
+    guard let user = authManager.currentUser else {
+      errorMessage = "Usuário não autenticado"
+      return
+    }
+
+    isLoading = true
+    errorMessage = nil
+
+    do {
+      transactions = try await dataService.fetchTransactionsByDateRange(
+        from: startDate,
+        to: endDate,
+        for: user
+      )
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+
+    isLoading = false
+  }
+
+  func clearFilters() async {
+    await loadTransactions()
+  }
+}

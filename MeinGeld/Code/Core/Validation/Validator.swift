@@ -16,7 +16,7 @@ protocol Validator {
 
 struct ValidationError: LocalizedError {
     let message: String
-    var errorDescription: String? { message }
+    var validationErrorDescription: String? { message }
 }
 
 // Validadores específicos
@@ -64,74 +64,74 @@ struct AmountValidator: Validator {
 }
 
 // Uso nos formulários
-struct SignUpView: View {
-    @State private var email = ""
-    @State private var password = ""
-    @State private var validationErrors: [ValidationError] = []
-    
-    private let emailValidator = EmailValidator()
-    private let passwordValidator = PasswordValidator()
-    
-    var body: some View {
-        VStack {
-            TextField("Email", text: $email)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .onChange(of: email) { _, newValue in
-                    validateEmail(newValue)
-                }
-            
-            SecureField("Senha", text: $password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .onChange(of: password) { _, newValue in
-                    validatePassword(newValue)
-                }
-            
-            // Mostrar erros de validação
-            ForEach(validationErrors, id: \.message) { error in
-                Text(error.message)
-                    .foregroundColor(.red)
-                    .font(.caption)
-            }
-            
-            Button("Cadastrar") {
-                signUp()
-            }
-            .disabled(!isFormValid)
-        }
-    }
-    
-    private func validateEmail(_ email: String) {
-        do {
-            try emailValidator.validate(email)
-            removeValidationError(containing: "Email")
-        } catch let error as ValidationError {
-            addValidationError(error)
-        } catch {}
-    }
-    
-    private func validatePassword(_ password: String) {
-        do {
-            try passwordValidator.validate(password)
-            removeValidationError(containing: "Senha")
-        } catch let error as ValidationError {
-            addValidationError(error)
-        } catch {}
-    }
-    
-    private var isFormValid: Bool {
-        validationErrors.isEmpty && !email.isEmpty && !password.isEmpty
-    }
-    
-    private func addValidationError(_ error: ValidationError) {
-        if !validationErrors.contains(where: { $0.message == error.message }) {
-            validationErrors.append(error)
-        }
-    }
-    
-    private func removeValidationError(containing text: String) {
-        validationErrors.removeAll { $0.message.contains(text) }
-    }
-}
+//struct SignUpView: View {
+//    @State private var email = ""
+//    @State private var password = ""
+//    @State private var validationErrors: [ValidationError] = []
+//    
+//    private let emailValidator = EmailValidator()
+//    private let passwordValidator = PasswordValidator()
+//    
+//    var body: some View {
+//        VStack {
+//            TextField("Email", text: $email)
+//                .textFieldStyle(RoundedBorderTextFieldStyle())
+//                .onChange(of: email) { _, newValue in
+//                    validateEmail(newValue)
+//                }
+//            
+//            SecureField("Senha", text: $password)
+//                .textFieldStyle(RoundedBorderTextFieldStyle())
+//                .onChange(of: password) { _, newValue in
+//                    validatePassword(newValue)
+//                }
+//            
+//            // Mostrar erros de validação
+//            ForEach(validationErrors, id: \.message) { error in
+//                Text(error.message)
+//                    .foregroundColor(.red)
+//                    .font(.caption)
+//            }
+//            
+//            Button("Cadastrar") {
+//                signUp()
+//            }
+//            .disabled(!isFormValid)
+//        }
+//    }
+//    
+//    private func validateEmail(_ email: String) {
+//        do {
+//            try emailValidator.validate(email)
+//            removeValidationError(containing: "Email")
+//        } catch let error as ValidationError {
+//            addValidationError(error)
+//        } catch {}
+//    }
+//    
+//    private func validatePassword(_ password: String) {
+//        do {
+//            try passwordValidator.validate(password)
+//            removeValidationError(containing: "Senha")
+//        } catch let error as ValidationError {
+//            addValidationError(error)
+//        } catch {}
+//    }
+//    
+//    private var isFormValid: Bool {
+//        validationErrors.isEmpty && !email.isEmpty && !password.isEmpty
+//    }
+//    
+//    private func addValidationError(_ error: ValidationError) {
+//        if !validationErrors.contains(where: { $0.message == error.message }) {
+//            validationErrors.append(error)
+//        }
+//    }
+//    
+//    private func removeValidationError(containing text: String) {
+//        validationErrors.removeAll { $0.message.contains(text) }
+//    }
+//}
 
 // Extension para Decimal com validação
 extension Decimal {

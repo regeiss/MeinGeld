@@ -5,67 +5,57 @@
 //  Created by Roberto Edgar Geiss on 16/07/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct TransactionsView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Transaction.date, order: .reverse) private var allTransactions: [Transaction]
-    @State private var showingAddTransaction = false
-    
-    private let authManager = AuthenticationManager.shared
-    private let firebaseService = FirebaseService.shared
-    
-    private var transactions: [Transaction] {
-        guard let currentUser = authManager.currentUser else { return [] }
-        return allTransactions.filter { $0.account?.user?.id == currentUser.id }
-    }
-    
-    var body: some View {
-        NavigationView {
-            List {
-                ForEach(transactions, id: \.id) { transaction in
-                    TransactionRowView(transaction: transaction)
-                }
-                .onDelete(perform: deleteTransactions)
-            }
-            .navigationTitle("Transações")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Adicionar") {
-                        showingAddTransaction = true
-                    }
-                }
-            }
-            .sheet(isPresented: $showingAddTransaction) {
-                AddTransactionView()
-            }
-            .onAppear {
-                firebaseService.logEvent(.transactionsViewed)
-            }
-        }
-    }
-    
-    private func deleteTransactions(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                let transaction = transactions[index]
-                
-                // Analytics - transação deletada
-                firebaseService.logEvent(.transactionDeleted(
-                    type: transaction.type.rawValue,
-                    category: transaction.category.rawValue
-                ))
-                
-                modelContext.delete(transaction)
-            }
-            
-            do {
-                try modelContext.save()
-            } catch {
-                ErrorManager.shared.handle(error, context: "TransactionsView.deleteTransactions")
-            }
-        }
-    }
-}
+  @Environment(\.dependencies) private var container
+  @State private var viewModel: TransactionViewModel?
+  @State private var showingAddTransaction = false
+  @State private var showingFilters = false
 
+  var body: some View {
+    NavigationView {
+      Group {
+        if let viewModel = viewModel {
+          TransactionsContentView(
+            viewModel: viewModel,
+            showingAddTransaction: $showingAddTransaction,
+            showingFilters: $showingFilters
+          )
+        } else {
+          ProgressView("Carregando...")
+        }
+      }
+      .navigationTitle("Transações")
+      .toolbar {
+        ToolbarItemGroup(placement: .navigationBarTrailing) {
+          Button(action: { showingFilters = true }) {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+          }
+
+          Button(action: { showingAddTransaction = true }) {
+            Image(systemName: "plus")
+          }
+        }
+      }
+    }
+    .onAppear {
+      setupViewModel()
+    }
+  }
+
+  private func setupViewModel() {
+    if viewModel == nil {
+      viewModel = TransactionViewModel(
+        dataService: container.dataService,
+        authManager: container.authManager,
+        firebaseService: container.firebaseService
+      )
+
+      Task {
+        await viewModel?.loadTransactions()
+      }
+    }
+  }
+}

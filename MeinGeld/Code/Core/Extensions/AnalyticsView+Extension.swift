@@ -8,8 +8,6 @@
 import Foundation
 
 extension AnalyticsEvent {
-    static let emailVerificationSent = AnalyticsEvent(name: "email_verification_sent")
-    static let emailVerified = AnalyticsEvent(name: "email_verified")
     static let biometricEnabled = AnalyticsEvent(name: "biometric_enabled")
     static let biometricDisabled = AnalyticsEvent(name: "biometric_disabled")
     static let passwordChanged = AnalyticsEvent(name: "password_changed")

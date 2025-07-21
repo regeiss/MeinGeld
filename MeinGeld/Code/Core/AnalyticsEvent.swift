@@ -31,7 +31,7 @@ extension AnalyticsEvent {
     static let signUpSuccess = AnalyticsEvent(name: "sign_up_success")
     static let signUpFailure = AnalyticsEvent(name: "sign_up_failure")
     static let signOut = AnalyticsEvent(name: "sign_out")
-    static let emailVerified = AnalyticsEvent(name: "email_verified")
+    static let emailIsVerified = AnalyticsEvent(name: "email_verified")
     
     // Transaction Events
     static func transactionCreated(type: String, category: String, amount: Double) -> AnalyticsEvent {

@@ -6,38 +6,58 @@
 //
 
 import Foundation
-// Protocolo para container de dependências
+import SwiftUI
+
+// MARK: - Enhanced Dependency Container
 protocol DependencyContainer {
-    var authManager: AuthenticationManagerProtocol { get }
+  var authManager: any AuthenticationManagerProtocol { get }
     var firebaseService: FirebaseServiceProtocol { get }
     var errorManager: ErrorManagerProtocol { get }
     var dataService: DataServiceProtocol { get }
+    var themeManager: ThemeManager { get }
 }
 
-// Container principal
+// MARK: - Production Container
 final class AppDependencyContainer: DependencyContainer {
-    lazy var authManager: AuthenticationManagerProtocol = {
-        AuthenticationManager(
-            errorManager: errorManager,
-            firebaseService: firebaseService
-        )
+    
+    // MARK: - Lazy Properties
+    lazy var errorManager: ErrorManagerProtocol = ErrorManager.shared
+    lazy var firebaseService: FirebaseServiceProtocol = FirebaseService.shared
+    lazy var themeManager: ThemeManager = ThemeManager.shared
+    
+    lazy var dataService: DataServiceProtocol = {
+        do {
+            return try DataService(
+                errorManager: errorManager,
+                firebaseService: firebaseService
+            )
+        } catch {
+            fatalError("Failed to initialize DataService: \(error)")
+        }
     }()
     
-    lazy var firebaseService: FirebaseServiceProtocol = FirebaseService.shared
-    lazy var errorManager: ErrorManagerProtocol = ErrorManager.shared
-    lazy var dataService: DataServiceProtocol = {
-        try! DataService(errorManager: errorManager)
+  lazy var authManager: any AuthenticationManagerProtocol = {
+        let manager = AuthenticationManager.shared
+        Task { @MainActor in
+            manager.setModelContext(dataService.getMainContext())
+        }
+        return manager
     }()
+    
+    // MARK: - Environment Key
+    struct DependencyContainerKey: EnvironmentKey {
+        static let defaultValue: DependencyContainer = AppDependencyContainer()
+    }
 }
 
 // Usar em Views
 //struct TransactionsView: View {
 //    private let container: DependencyContainer
-//    
+//
 //    init(container: DependencyContainer) {
 //        self.container = container
 //    }
-//    
+//
 //    var body: some View {
 //        // Implementação
 //    }
@@ -47,11 +67,17 @@ final class AppDependencyContainer: DependencyContainer {
 //@main
 //struct PersonalFinanceApp: App {
 //    private let container = AppDependencyContainer()
-//    
+//
 //    var body: some Scene {
 //        WindowGroup {
 //            ContentView(container: container)
 //                .modelContainer(container.dataService.getModelContainer())
 //        }
 //    }
+
+extension EnvironmentValues {
+  var dependencies: DependencyContainer {
+    get { self[AppDependencyContainer.DependencyContainerKey.self] }
+    set { self[AppDependencyContainer.DependencyContainerKey.self] = newValue }
+  }
 }
