@@ -31,7 +31,13 @@ extension AnalyticsEvent {
     static let signUpSuccess = AnalyticsEvent(name: "sign_up_success")
     static let signUpFailure = AnalyticsEvent(name: "sign_up_failure")
     static let signOut = AnalyticsEvent(name: "sign_out")
-    static let emailIsVerified = AnalyticsEvent(name: "email_verified")
+    
+    // Enhanced Authentication Events
+    static let passwordResetRequested = AnalyticsEvent(name: "password_reset_requested")
+    static let passwordResetCompleted = AnalyticsEvent(name: "password_reset_completed")
+    static let accountDeleted = AnalyticsEvent(name: "account_deleted")
+    static let emailVerificationSent = AnalyticsEvent(name: "email_verification_sent")
+    static let emailVerified = AnalyticsEvent(name: "email_verified")
     
     // Transaction Events
     static func transactionCreated(type: String, category: String, amount: Double) -> AnalyticsEvent {
@@ -84,4 +90,3 @@ extension AnalyticsEvent {
     static let budgetViewed = AnalyticsEvent(name: "budget_viewed")
     static let transactionsViewed = AnalyticsEvent(name: "transactions_viewed")
 }
-

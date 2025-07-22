@@ -5,6 +5,7 @@
 //  Created by Roberto Edgar Geiss on 19/07/25.
 //
 
+import Foundation
 import SwiftData
 import Testing
 
@@ -85,3 +86,4 @@ extension Transaction {
     )
   }
 }
+

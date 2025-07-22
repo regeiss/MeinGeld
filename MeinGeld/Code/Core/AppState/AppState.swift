@@ -11,6 +11,7 @@ import SwiftUI
 // Estado global da aplicação
 @MainActor
 @Observable
+
 final class AppState {
   // User State
   var currentUser: User?

@@ -19,7 +19,7 @@ enum TransactionType: String, CaseIterable, Codable {
   }
 }
 
-enum TransactionCategory: String, CaseIterable, Codable {
+enum TransactionCategory: String, CaseIterable, Codable, Comparable {
   case food = "food"
   case transport = "transport"
   case entertainment = "entertainment"
@@ -56,6 +56,33 @@ enum TransactionCategory: String, CaseIterable, Codable {
     case .investment: return "chart.line.uptrend.xyaxis"
     case .other: return "questionmark.circle"
     }
+  }
+
+  // MARK: - Comparable Implementation
+  static func < (lhs: TransactionCategory, rhs: TransactionCategory) -> Bool {
+    return lhs.displayName < rhs.displayName
+  }
+
+  // Ordem customizada para organização lógica (opcional)
+  var sortOrder: Int {
+    switch self {
+    case .salary: return 0  // Receitas primeiro
+    case .investment: return 1
+    case .food: return 2  // Despesas essenciais
+    case .healthcare: return 3
+    case .bills: return 4
+    case .transport: return 5  // Despesas de mobilidade
+    case .shopping: return 6  // Despesas opcionais
+    case .entertainment: return 7
+    case .other: return 8  // Outros por último
+    }
+  }
+
+  // Método para ordenação customizada (alternativa)
+  static func sortedByLogicalOrder(_ categories: [TransactionCategory])
+    -> [TransactionCategory]
+  {
+    return categories.sorted { $0.sortOrder < $1.sortOrder }
   }
 }
 

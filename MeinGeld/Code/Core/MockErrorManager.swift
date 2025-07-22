@@ -6,9 +6,8 @@
 //
 
 import SwiftData
-import Testing
+//import Testing
 
-@testable import MeinGeld
 
 final class MockErrorManager: ErrorManagerProtocol {
   var handledErrors: [(Error, String)] = []

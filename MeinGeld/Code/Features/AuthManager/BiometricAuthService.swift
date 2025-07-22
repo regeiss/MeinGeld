@@ -14,7 +14,7 @@ import SwiftUI
 // MARK: - Biometric Authentication Service
 @MainActor
 final class BiometricAuthService: ObservableObject {
-  var objectWillChange: ObservableObjectPublisher
+  var objectWillChange = ObservableObjectPublisher()
 
   @Published var biometricType: LABiometryType = .none
   @Published var isAvailable = false
@@ -114,3 +114,4 @@ final class BiometricAuthService: ObservableObject {
     }
   }
 }
+

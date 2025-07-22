@@ -6,9 +6,8 @@
 //
 
 import SwiftData
-import Testing
+//import Testing
 
-@testable import MeinGeld
 
 // Mock do Firebase Service
 final class MockFirebaseService: FirebaseServiceProtocol {
