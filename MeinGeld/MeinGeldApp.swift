@@ -10,12 +10,26 @@ import SwiftData
 import SwiftUI
 
 class AppDelegate: NSObject, UIApplicationDelegate {
+
 }
 
 @main
 struct PersonalFinanceApp: App {
   @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+  private let dataService: DataService
+  private let firebaseService = FirebaseService.shared
 
+  init() {
+    // Configura Firebase primeiro
+    firebaseService.configure()
+
+    do {
+      self.dataService = try DataService()
+    } catch {
+      ErrorManager.shared.handle(error, context: "PersonalFinanceApp.init")
+      fatalError("Falha ao inicializar DataService: \(error)")
+    }
+  }
   // MARK: - Dependency Container
   private let container: DependencyContainer = AppDependencyContainer()
 
