@@ -17,7 +17,7 @@ struct AccountsView: View {
     
     private var accounts: [Account] {
         guard let currentUser = authManager.currentUser else { return [] }
-        return allAccounts.filter { $0.user?.id == currentUser.id }
+        return allAccounts.filter { $0.user.id == currentUser.id }
     }
     
     var body: some View {

@@ -11,52 +11,6 @@ import Testing
 
 @testable import MeinGeld
 
-// Mock do Firebase Service
-final class MockFirebaseService: FirebaseServiceProtocol {
-  var eventsLogged: [AnalyticsEvent] = []
-  var errorsRecorded: [Error] = []
-
-  func configure() {}
-
-  func logEvent(_ event: AnalyticsEvent) {
-    eventsLogged.append(event)
-  }
-
-  func recordError(_ error: Error, context: String) {
-    errorsRecorded.append(error)
-  }
-
-  func recordNonFatalError(_ error: Error, context: String) {
-    errorsRecorded.append(error)
-  }
-
-  func setUserID(_ userID: String) {}
-  func setUserProperty(_ value: String?, forName name: String) {}
-}
-
-// Mock do Error Manager
-final class MockErrorManager: ErrorManagerProtocol {
-  var handledErrors: [(Error, String)] = []
-  var warnings: [(String, String)] = []
-  var infos: [(String, String)] = []
-
-  func handle(_ error: Error, context: String) {
-    handledErrors.append((error, context))
-  }
-
-  func handleNonFatal(_ error: Error, context: String) {
-    handledErrors.append((error, context))
-  }
-
-  func logWarning(_ message: String, context: String) {
-    warnings.append((message, context))
-  }
-
-  func logInfo(_ message: String, context: String) {
-    infos.append((message, context))
-  }
-}
-
 // Testes para AuthenticationManager
 @MainActor
 
@@ -86,4 +40,3 @@ extension Transaction {
     )
   }
 }
-

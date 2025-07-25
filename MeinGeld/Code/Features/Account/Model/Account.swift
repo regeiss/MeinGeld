@@ -15,7 +15,7 @@ final class Account: @unchecked Sendable {
     var balance: Decimal
     var accountType: AccountType
     var isActive: Bool
-    var user: User?
+    var user: User
     @Relationship(deleteRule: .cascade) var transactions: [Transaction]
     
     init(
@@ -24,7 +24,7 @@ final class Account: @unchecked Sendable {
         balance: Decimal = 0,
         accountType: AccountType,
         isActive: Bool = true,
-        user: User? = nil
+        user: User
     ) {
         self.id = id
         self.name = name

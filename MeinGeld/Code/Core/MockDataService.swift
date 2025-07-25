@@ -121,9 +121,9 @@ final class MockDataService: DataServiceProtocol {
     }
 
     users.removeAll { $0.id == user.id }
-    accounts.removeAll { $0.user?.id == user.id }
-    transactions.removeAll { $0.account?.user?.id == user.id }
-    budgets.removeAll { $0.user?.id == user.id }
+    accounts.removeAll { $0.user.id == user.id }
+    transactions.removeAll { $0.account?.user.id == user.id }
+    budgets.removeAll { $0.user.id == user.id }
   }
 
   // MARK: - Account Operations
@@ -148,7 +148,7 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
-    return accounts.filter { $0.user?.id == user.id && $0.isActive }
+    return accounts.filter { $0.user.id == user.id && $0.isActive }
   }
 
   func updateAccount(_ account: Account) async throws {
@@ -212,7 +212,7 @@ final class MockDataService: DataServiceProtocol {
 
     var userTransactions =
       transactions
-      .filter { $0.account?.user?.id == user.id }
+      .filter { $0.account?.user.id == user.id }
       .sorted { $0.date > $1.date }
 
     if let offset = offset {
@@ -269,7 +269,7 @@ final class MockDataService: DataServiceProtocol {
 
     return
       transactions
-      .filter { $0.category == category && $0.account?.user?.id == user.id }
+      .filter { $0.category == category && $0.account?.user.id == user.id }
       .sorted { $0.date > $1.date }
   }
 
@@ -290,7 +290,7 @@ final class MockDataService: DataServiceProtocol {
       transactions
       .filter {
         $0.date >= startDate && $0.date <= endDate
-          && $0.account?.user?.id == user.id
+          && $0.account?.user.id == user.id
       }
       .sorted { $0.date > $1.date }
   }
@@ -350,7 +350,7 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
-    return budgets.filter { $0.user?.id == user.id }
+    return budgets.filter { $0.user.id == user.id }
   }
 
   func fetchBudget(
@@ -369,7 +369,7 @@ final class MockDataService: DataServiceProtocol {
 
     return budgets.first {
       $0.category == category && $0.month == month && $0.year == year
-        && $0.user?.id == user.id
+        && $0.user.id == user.id
     }
   }
 

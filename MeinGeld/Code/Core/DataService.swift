@@ -188,7 +188,7 @@ final class DataService: DataServiceProtocol {
           name: "account_created",
           parameters: [
             "account_type": account.accountType.rawValue,
-            "user_id": account.user?.id.uuidString ?? "",
+            "user_id": account.user.id.uuidString,
           ]
         )
       )
@@ -207,7 +207,7 @@ final class DataService: DataServiceProtocol {
       let userID = user.id
       let descriptor = FetchDescriptor<Account>(
         predicate: #Predicate<Account> { account in
-          account.isActive && account.user?.id == userID
+          account.isActive && account.user.id == userID
         },
         sortBy: [SortDescriptor(\.name)]
       )
@@ -301,7 +301,7 @@ final class DataService: DataServiceProtocol {
 
       var descriptor = FetchDescriptor<Transaction>(
         predicate: #Predicate<Transaction> { transaction in
-          transaction.account?.user?.id == userID
+          transaction.account?.user.id == userID
         },
         sortBy: [SortDescriptor(\.date, order: .reverse)]
       )
@@ -362,7 +362,7 @@ final class DataService: DataServiceProtocol {
       let descriptor = FetchDescriptor<Transaction>(
         predicate: #Predicate<Transaction> { transaction in
           transaction.category == targetCategory
-            && transaction.account?.user?.id == userID
+            && transaction.account?.user.id == userID
         },
         sortBy: [SortDescriptor(\.date, order: .reverse)]
       )
@@ -387,7 +387,7 @@ final class DataService: DataServiceProtocol {
       let descriptor = FetchDescriptor<Transaction>(
         predicate: #Predicate<Transaction> { transaction in
           transaction.date >= start && transaction.date <= end
-            && transaction.account?.user?.id == userID
+            && transaction.account?.user.id == userID
         },
         sortBy: [SortDescriptor(\.date, order: .reverse)]
       )
@@ -477,7 +477,7 @@ final class DataService: DataServiceProtocol {
 
       let descriptor = FetchDescriptor<Budget>(
         predicate: #Predicate<Budget> { budget in
-          budget.user?.id == userID
+          budget.user.id == userID
         },
         sortBy: [SortDescriptor(\.category)]
       )
@@ -502,8 +502,10 @@ final class DataService: DataServiceProtocol {
 
       let descriptor = FetchDescriptor<Budget>(
         predicate: #Predicate<Budget> { budget in
-          budget.category == targetCategory && budget.month == targetMonth
-            && budget.year == targetYear && budget.user?.id == userID
+          budget.category == targetCategory &&
+          budget.month == targetMonth &&
+          budget.year == targetYear &&
+          budget.user.id == userID
         }
       )
       let budgets = try modelContext.fetch(descriptor)
@@ -589,7 +591,15 @@ final class DataService: DataServiceProtocol {
       var result: [String: Decimal] = [:]
       for expense in expenses {
         let categoryName = expense.category.displayName
-        result[categoryName, default: 0] += abs(expense.amount)
+        let amount = expense.amount
+        let absAmount: Decimal
+        if amount < 0 {
+          absAmount = -amount
+        } else {
+          absAmount = amount
+        }
+        let current = result[categoryName] ?? 0
+        result[categoryName] = current + absAmount
       }
 
       return result
@@ -856,3 +866,4 @@ final class DataService: DataServiceProtocol {
     }
   }
 }
+

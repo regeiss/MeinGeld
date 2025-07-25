@@ -118,7 +118,7 @@ final class BudgetViewModel {
             try await dataService.updateBudget(budget)
             
             // Update local array
-            if let index = budgets.firstIndex(where: { $0.id == budget.id }) {
+            if let index = budgets.firstIndex(where: { $0.id == budget.id && $0.user.id == budget.user.id }) {
                 budgets[index] = budget
             }
             
@@ -137,7 +137,7 @@ final class BudgetViewModel {
             try await dataService.deleteBudget(budget)
             
             // Remove from local array
-            budgets.removeAll { $0.id == budget.id }
+            budgets.removeAll { $0.id == budget.id && $0.user.id == budget.user.id }
             
         } catch {
             errorMessage = error.localizedDescription
@@ -147,7 +147,7 @@ final class BudgetViewModel {
     }
     
     func getBudgetProgress(for category: TransactionCategory) -> Double {
-        guard let budget = budgets.first(where: { $0.category == category }),
+        guard let budget = budgets.first(where: { $0.category == category && $0.user.id == authManager.currentUser?.id }),
               budget.limit > 0 else {
             return 0.0
         }
@@ -157,7 +157,7 @@ final class BudgetViewModel {
     }
     
     func isOverBudget(for category: TransactionCategory) -> Bool {
-        guard let budget = budgets.first(where: { $0.category == category }) else {
+        guard let budget = budgets.first(where: { $0.category == category && $0.user.id == authManager.currentUser?.id }) else {
             return false
         }
         

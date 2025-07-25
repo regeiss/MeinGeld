@@ -42,7 +42,7 @@ final class TransactionRepository: TransactionRepositoryProtocol {
     }
 
     let descriptor = FetchDescriptor<Transaction>(
-      predicate: #Predicate<Transaction> { $0.account?.user?.id == userId },
+      predicate: #Predicate<Transaction> { $0.account?.user.id == userId },
       sortBy: [SortDescriptor(\.date, order: .reverse)]
     )
 
@@ -75,21 +75,23 @@ final class TransactionRepository: TransactionRepositoryProtocol {
     try modelContext.save()
 
     // Invalidate cache
-    if let userId = transaction.account?.user?.id {
+    if let account = transaction.account {
+      let userId = account.user.id
       cachedTransactions.removeValue(forKey: userId)
       lastFetchTime.removeValue(forKey: userId)
     }
   }
 
   func deleteTransaction(_ transaction: Transaction) async throws {
-    let userId = transaction.account?.user?.id
+    let userId = transaction.account?.user.id
     modelContext.delete(transaction)
     try modelContext.save()
 
     // Invalidate cache
     if let userId = userId {
-      cachedTransactions.removeValue(forKey: userId)
-      lastFetchTime.removeValue(forKey: userId)
+        cachedTransactions.removeValue(forKey: userId)
+        lastFetchTime.removeValue(forKey: userId)
     }
   }
 }
+

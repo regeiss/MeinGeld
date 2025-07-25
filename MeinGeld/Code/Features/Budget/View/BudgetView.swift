@@ -17,7 +17,7 @@ struct BudgetView: View {
     
     private var budgets: [Budget] {
         guard let currentUser = authManager.currentUser else { return [] }
-        return allBudgets.filter { $0.user?.id == currentUser.id }
+        return allBudgets.filter { $0.user.id == currentUser.id }
     }
     
     var body: some View {

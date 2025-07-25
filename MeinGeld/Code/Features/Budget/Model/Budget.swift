@@ -15,7 +15,7 @@ final class Budget: @unchecked Sendable {
     var spent: Decimal
     var month: Int
     var year: Int
-    var user: User?
+    var user: User
     
     init(
         id: UUID = UUID(),
@@ -24,7 +24,7 @@ final class Budget: @unchecked Sendable {
         spent: Decimal = 0,
         month: Int,
         year: Int,
-        user: User? = nil
+        user: User
     ) {
         self.id = id
         self.category = category
