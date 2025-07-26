@@ -183,188 +183,87 @@ struct EnhancedTextField: View {
   }
 }
 
-// Empty State Component
-struct EmptyStateView: View {
-  let title: String
-  let message: String
-  let systemImage: String
-  let actionTitle: String?
-  let action: (() -> Void)?
 
-  init(
-    title: String,
-    message: String,
-    systemImage: String,
-    actionTitle: String? = nil,
-    action: (() -> Void)? = nil
-  ) {
-    self.title = title
-    self.message = message
-    self.systemImage = systemImage
-    self.actionTitle = actionTitle
-    self.action = action
-  }
 
-  var body: some View {
-    VStack(spacing: DesignTokens.Spacing.lg) {
-      Image(systemName: systemImage)
-        .font(.system(size: 64))
-        .foregroundColor(DesignTokens.Colors.secondary)
 
-      VStack(spacing: DesignTokens.Spacing.sm) {
-        Text(title)
-          .font(DesignTokens.Typography.h3)
-          .multilineTextAlignment(.center)
-
-        Text(message)
-          .font(DesignTokens.Typography.body)
-          .foregroundColor(DesignTokens.Colors.textSecondary)
-          .multilineTextAlignment(.center)
-      }
-
-      if let actionTitle = actionTitle, let action = action {
-        Button(action: action) {
-          Text(actionTitle)
-            .font(DesignTokens.Typography.body)
-            .fontWeight(.medium)
-            .foregroundColor(DesignTokens.Colors.primary)
-        }
-      }
-    }
-    .padding(DesignTokens.Spacing.xl)
-  }
-}
-
-// Toast/Snackbar Component
-struct ToastView: View {
-  let message: String
-  let type: ToastType
-  @Binding var isShowing: Bool
-
-  enum ToastType {
-    case success, error, info
-
-    var color: Color {
-      switch self {
-      case .success: return DesignTokens.Colors.success
-      case .error: return DesignTokens.Colors.danger
-      case .info: return DesignTokens.Colors.primary
-      }
-    }
-
-    var icon: String {
-      switch self {
-      case .success: return "checkmark.circle.fill"
-      case .error: return "exclamationmark.circle.fill"
-      case .info: return "info.circle.fill"
-      }
-    }
-  }
-
-  var body: some View {
-    HStack {
-      Image(systemName: type.icon)
-        .foregroundColor(type.color)
-
-      Text(message)
-        .font(DesignTokens.Typography.body)
-        .foregroundColor(DesignTokens.Colors.text)
-
-      Spacer()
-
-      Button("Fechar") {
-        withAnimation {
-          isShowing = false
-        }
-      }
-      .font(DesignTokens.Typography.caption)
-      .foregroundColor(type.color)
-    }
-    .padding(DesignTokens.Spacing.md)
-    .background(DesignTokens.Colors.surface)
-    .cornerRadius(DesignTokens.Border.radius)
-    .shadow(radius: 4)
-    .padding(.horizontal, DesignTokens.Spacing.md)
-  }
-}
 
 // Usage Examples
-struct ExampleUsage: View {
-  @State private var email = ""
-  @State private var isLoading = false
-  @State private var showToast = false
-  @State private var emailError: String?
-
-  var body: some View {
-    ScrollView {
-      VStack(spacing: DesignTokens.Spacing.lg) {
-        // Card Example
-        Card {
-          VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
-            Text("Saldo Total")
-              .font(DesignTokens.Typography.caption)
-              .foregroundColor(DesignTokens.Colors.textSecondary)
-
-            Text("R$ 5.250,00")
-              .font(DesignTokens.Typography.h2)
-              .foregroundColor(DesignTokens.Colors.success)
-          }
-        }
-
-        // Enhanced Text Field Example
-        EnhancedTextField(
-          title: "Email",
-          text: $email,
-          keyboardType: .emailAddress,
-          validationError: emailError,
-          icon: "envelope"
-        )
-
-        // Loading Button Example
-        LoadingButton(
-          title: "Entrar",
-          isLoading: isLoading,
-          action: {
-            isLoading = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-              isLoading = false
-              showToast = true
-            }
-          }
-        )
-
-        // Empty State Example
-        EmptyStateView(
-          title: "Nenhuma transação encontrada",
-          message:
-            "Você ainda não tem nenhuma transação. Adicione uma para começar.",
-          systemImage: "list.bullet.rectangle",
-          actionTitle: "Adicionar Transação",
-          action: { print("Add transaction") }
-        )
-      }
-      .padding(DesignTokens.Spacing.md)
-    }
-    .overlay(
-      // Toast overlay
-      VStack {
-        if showToast {
-          ToastView(
-            message: "Login realizado com sucesso!",
-            type: .success,
-            isShowing: $showToast
-          )
-          .transition(.move(edge: .top))
-          .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-              withAnimation {
-                showToast = false
-              }
-            }
-          }
-        }
-        Spacer()
-      }
-    )
-  }
-}
+//struct ExampleUsage: View {
+//  @State private var email = ""
+//  @State private var isLoading = false
+//  @State private var showToast = false
+//  @State private var emailError: String?
+//
+//  var body: some View {
+//    ScrollView {
+//      VStack(spacing: DesignTokens.Spacing.lg) {
+//        // Card Example
+//        Card {
+//          VStack(alignment: .leading, spacing: DesignTokens.Spacing.md) {
+//            Text("Saldo Total")
+//              .font(DesignTokens.Typography.caption)
+//              .foregroundColor(DesignTokens.Colors.textSecondary)
+//
+//            Text("R$ 5.250,00")
+//              .font(DesignTokens.Typography.h2)
+//              .foregroundColor(DesignTokens.Colors.success)
+//          }
+//        }
+//
+//        // Enhanced Text Field Example
+//        EnhancedTextField(
+//          title: "Email",
+//          text: $email,
+//          keyboardType: .emailAddress,
+//          validationError: emailError,
+//          icon: "envelope"
+//        )
+//
+//        // Loading Button Example
+//        LoadingButton(
+//          title: "Entrar",
+//          isLoading: isLoading,
+//          action: {
+//            isLoading = true
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+//              isLoading = false
+//              showToast = true
+//            }
+//          }
+//        )
+//
+//        // Empty State Example
+//        EmptyStateView(
+//          title: "Nenhuma transação encontrada",
+//          message:
+//            "Você ainda não tem nenhuma transação. Adicione uma para começar.",
+//          systemImage: "list.bullet.rectangle",
+//          actionTitle: "Adicionar Transação",
+//          action: { print("Add transaction") }
+//        )
+//      }
+//      .padding(DesignTokens.Spacing.md)
+//    }
+//    .overlay(
+//      // Toast overlay
+//      VStack {
+//        if showToast {
+//          ToastView(
+//            message: "Login realizado com sucesso!",
+//            type: .success,
+//            isShowing: $showToast
+//          )
+//          .transition(.move(edge: .top))
+//          .onAppear {
+//            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+//              withAnimation {
+//                showToast = false
+//              }
+//            }
+//          }
+//        }
+//        Spacer()
+//      }
+//    )
+//  }
+//}

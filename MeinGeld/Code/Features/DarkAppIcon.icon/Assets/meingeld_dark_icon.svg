@@ -1,0 +1,84 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with rounded corners - Dark theme -->
+  <defs>
+    <linearGradient id="darkBackgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1C1C1E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="darkCoinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD60A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF9F0A;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#64D2FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#007AFF;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="darkShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+    
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Rounded rectangle background -->
+  <rect width="1024" height="1024" rx="180" ry="180" fill="url(#darkBackgroundGradient)"/>
+  
+  <!-- Subtle border for definition -->
+  <rect width="1024" height="1024" rx="180" ry="180" fill="none" stroke="#2C2C2E" stroke-width="2"/>
+  
+  <!-- Main coin symbol with glow -->
+  <circle cx="512" cy="400" r="160" fill="url(#darkCoinGradient)" filter="url(#darkShadow)"/>
+  
+  <!-- Dollar sign in the coin - more vibrant for dark mode -->
+  <path d="M512 300 L512 280 M512 520 L512 500 M470 330 Q470 310 490 310 L534 310 Q554 310 554 330 Q554 350 534 350 L490 370 Q470 370 470 390 Q470 410 490 410 L534 410 Q554 410 554 430 Q554 450 534 450 L490 450 Q470 450 470 470" 
+        stroke="#1C1C1E" 
+        stroke-width="26" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        fill="none"
+        filter="url(#glow)"/>
+  
+  <!-- Chart bars with gradient - more vibrant for dark mode -->
+  <rect x="300" y="680" width="60" height="120" rx="8" fill="url(#accentGradient)" opacity="0.9"/>
+  <rect x="390" y="620" width="60" height="180" rx="8" fill="url(#accentGradient)" opacity="0.9"/>
+  <rect x="480" y="580" width="60" height="220" rx="8" fill="url(#accentGradient)" opacity="0.9"/>
+  <rect x="570" y="540" width="60" height="260" rx="8" fill="url(#accentGradient)" opacity="0.9"/>
+  <rect x="660" y="500" width="60" height="300" rx="8" fill="url(#accentGradient)" opacity="0.9"/>
+  
+  <!-- Connecting dots on the chart - brighter for dark mode -->
+  <circle cx="330" cy="670" r="8" fill="#FFD60A" filter="url(#glow)"/>
+  <circle cx="420" cy="610" r="8" fill="#FFD60A" filter="url(#glow)"/>
+  <circle cx="510" cy="570" r="8" fill="#FFD60A" filter="url(#glow)"/>
+  <circle cx="600" cy="530" r="8" fill="#FFD60A" filter="url(#glow)"/>
+  <circle cx="690" cy="490" r="8" fill="#FFD60A" filter="url(#glow)"/>
+  
+  <!-- Connecting lines with glow effect -->
+  <path d="M330 670 L420 610 L510 570 L600 530 L690 490" 
+        stroke="#FFD60A" 
+        stroke-width="6" 
+        stroke-linecap="round" 
+        fill="none" 
+        opacity="0.9"
+        filter="url(#glow)"/>
+  
+  <!-- Decorative elements - adjusted for dark theme -->
+  <circle cx="280" cy="250" r="12" fill="#64D2FF" opacity="0.4"/>
+  <circle cx="750" cy="300" r="8" fill="#FFD60A" opacity="0.5"/>
+  <circle cx="200" cy="400" r="6" fill="#64D2FF" opacity="0.3"/>
+  <circle cx="820" cy="600" r="10" fill="#FFD60A" opacity="0.4"/>
+  
+  <!-- Additional subtle elements for depth -->
+  <circle cx="150" cy="150" r="4" fill="#64D2FF" opacity="0.2"/>
+  <circle cx="880" cy="180" r="6" fill="#FFD60A" opacity="0.3"/>
+  <circle cx="120" cy="850" r="8" fill="#64D2FF" opacity="0.2"/>
+  <circle cx="900" cy="880" r="5" fill="#FFD60A" opacity="0.3"/>
+</svg>

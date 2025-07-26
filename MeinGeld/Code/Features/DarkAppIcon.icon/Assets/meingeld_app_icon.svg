@@ -1,0 +1,60 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with rounded corners -->
+  <defs>
+    <linearGradient id="backgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007AFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0051D5;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="coinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Rounded rectangle background -->
+  <rect width="1024" height="1024" rx="180" ry="180" fill="url(#backgroundGradient)"/>
+  
+  <!-- Main coin symbol -->
+  <circle cx="512" cy="400" r="160" fill="url(#coinGradient)" filter="url(#shadow)"/>
+  
+  <!-- Dollar sign in the coin -->
+  <path d="M512 300 L512 280 M512 520 L512 500 M470 330 Q470 310 490 310 L534 310 Q554 310 554 330 Q554 350 534 350 L490 370 Q470 370 470 390 Q470 410 490 410 L534 410 Q554 410 554 430 Q554 450 534 450 L490 450 Q470 450 470 470" 
+        stroke="white" 
+        stroke-width="24" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        fill="none"/>
+  
+  <!-- Chart bars representing financial growth -->
+  <rect x="300" y="680" width="60" height="120" rx="8" fill="white" opacity="0.9"/>
+  <rect x="390" y="620" width="60" height="180" rx="8" fill="white" opacity="0.9"/>
+  <rect x="480" y="580" width="60" height="220" rx="8" fill="white" opacity="0.9"/>
+  <rect x="570" y="540" width="60" height="260" rx="8" fill="white" opacity="0.9"/>
+  <rect x="660" y="500" width="60" height="300" rx="8" fill="white" opacity="0.9"/>
+  
+  <!-- Connecting dots on the chart -->
+  <circle cx="330" cy="670" r="8" fill="#FFD700"/>
+  <circle cx="420" cy="610" r="8" fill="#FFD700"/>
+  <circle cx="510" cy="570" r="8" fill="#FFD700"/>
+  <circle cx="600" cy="530" r="8" fill="#FFD700"/>
+  <circle cx="690" cy="490" r="8" fill="#FFD700"/>
+  
+  <!-- Connecting lines -->
+  <path d="M330 670 L420 610 L510 570 L600 530 L690 490" 
+        stroke="#FFD700" 
+        stroke-width="6" 
+        stroke-linecap="round" 
+        fill="none" 
+        opacity="0.8"/>
+  
+  <!-- Decorative elements for polish -->
+  <circle cx="280" cy="250" r="12" fill="white" opacity="0.3"/>
+  <circle cx="750" cy="300" r="8" fill="white" opacity="0.4"/>
+  <circle cx="200" cy="400" r="6" fill="white" opacity="0.2"/>
+  <circle cx="820" cy="600" r="10" fill="white" opacity="0.3"/>
+</svg>

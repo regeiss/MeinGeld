@@ -24,13 +24,7 @@ struct TransactionsContentView: View {
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
       } else if viewModel.transactions.isEmpty {
-        EmptyStateView(
-          title: "Nenhuma transação",
-          message: "Adicione sua primeira transação para começar",
-          systemImage: "list.bullet.rectangle",
-          actionTitle: "Adicionar Transação",
-          action: { showingAddTransaction = true }
-        )
+        TransactionPlaceholderView(showingAddTransaction: $showingAddTransaction)
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
       } else {
@@ -84,3 +78,4 @@ struct TransactionsContentView: View {
     }
   }
 }
+
