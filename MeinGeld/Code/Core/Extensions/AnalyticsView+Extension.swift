@@ -8,8 +8,10 @@
 import Foundation
 
 extension AnalyticsEvent {
-    static let biometricEnabled = AnalyticsEvent(name: "biometric_enabled")
-    static let biometricDisabled = AnalyticsEvent(name: "biometric_disabled")
-    static let passwordChanged = AnalyticsEvent(name: "password_changed")
-    static let securitySettingsViewed = AnalyticsEvent(name: "security_settings_viewed")
+  static let biometricEnabled = AnalyticsEvent(name: "biometric_enabled")
+  static let biometricDisabled = AnalyticsEvent(name: "biometric_disabled")
+  static let passwordChanged = AnalyticsEvent(name: "password_changed")
+  static let securitySettingsViewed = AnalyticsEvent(
+    name: "security_settings_viewed"
+  )
 }

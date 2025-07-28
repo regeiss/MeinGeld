@@ -9,6 +9,7 @@ import Foundation
 import SwiftData
 
 // MARK: - Repository Protocol
+@MainActor
 protocol TransactionRepositoryProtocol {
   func fetchTransactions(for userId: UUID) async throws -> [Transaction]
   func fetchRecentTransactions(for userId: UUID, limit: Int) async throws
@@ -94,4 +95,3 @@ final class TransactionRepository: TransactionRepositoryProtocol {
     }
   }
 }
-

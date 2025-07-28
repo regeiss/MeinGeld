@@ -10,7 +10,7 @@ import SwiftData
 import Foundation
 
 @Model
-final class Transaction: @unchecked Sendable {
+final class Transaction {
     var id: UUID
     var amount: Decimal
     var transactionDescription: String

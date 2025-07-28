@@ -5,28 +5,19 @@
 //  Created by Roberto Edgar Geiss on 26/07/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct AddBudgetView: View {
-  @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) private var dismiss
+  @State var viewModel: BudgetViewModel
 
   @State private var selectedCategory = TransactionCategory.food
   @State private var limitAmount = ""
-  @State private var selectedMonth = Calendar.current.component(
-    .month,
-    from: Date()
-  )
-  @State private var selectedYear = Calendar.current.component(
-    .year,
-    from: Date()
-  )
+  @State private var selectedMonth: Int
+  @State private var selectedYear: Int
   @State private var showingAlert = false
   @State private var alertMessage = ""
-
-  private let authManager = AuthenticationManager.shared
-  private let firebaseService = FirebaseService.shared
 
   private let months = [
     (1, "Janeiro"), (2, "Fevereiro"), (3, "Março"), (4, "Abril"),
@@ -35,6 +26,12 @@ struct AddBudgetView: View {
   ]
 
   private let years = Array(2020...2030)
+
+  init(viewModel: BudgetViewModel) {
+    self.viewModel = viewModel
+    self._selectedMonth = State(initialValue: viewModel.selectedMonth)
+    self._selectedYear = State(initialValue: viewModel.selectedYear)
+  }
 
   var body: some View {
     NavigationView {
@@ -84,7 +81,7 @@ struct AddBudgetView: View {
           Button("Salvar") {
             saveBudget()
           }
-          .disabled(limitAmount.isEmpty)
+          .disabled(limitAmount.isEmpty || viewModel.isLoading)
         }
       }
       .alert("Erro", isPresented: $showingAlert) {
@@ -96,51 +93,26 @@ struct AddBudgetView: View {
   }
 
   private func saveBudget() {
-    guard let currentUser = authManager.currentUser else {
-      showAlert("Usuário não encontrado")
-      return
-    }
+    Task {
+      guard let limit = Decimal(string: limitAmount), limit > 0 else {
+        alertMessage = "Valor do limite inválido"
+        showingAlert = true
+        return
+      }
 
-    guard let limit = Decimal(string: limitAmount), limit > 0 else {
-      showAlert("Valor do limite inválido")
-      return
-    }
-
-    let budget = Budget(
-      category: selectedCategory,
-      limit: limit,
-      month: selectedMonth,
-      year: selectedYear,
-      user: currentUser
-    )
-
-    modelContext.insert(budget)
-
-    do {
-      try modelContext.save()
-
-      // Analytics - orçamento criado
-      firebaseService.logEvent(
-        AnalyticsEvent(
-          name: "budget_created",
-          parameters: [
-            "category": selectedCategory.rawValue,
-            "limit": limit.doubleValue,
-            "month": selectedMonth,
-            "year": selectedYear,
-          ]
-        )
+      let success = await viewModel.createBudget(
+        category: selectedCategory,
+        limit: limit,
+        month: selectedMonth,
+        year: selectedYear
       )
 
-      dismiss()
-    } catch {
-      ErrorManager.shared.handle(error, context: "AddBudgetView.saveBudget")
-      showAlert("Erro ao salvar orçamento")
+      if success {
+        dismiss()
+      } else if let error = viewModel.errorMessage {
+        alertMessage = error
+        showingAlert = true
+      }
     }
-  }
-
-  private func showAlert(_ message: String) {
-    alertMessage = message
-    showingAlert = true
   }
 }

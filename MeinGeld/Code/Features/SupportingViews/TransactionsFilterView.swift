@@ -51,25 +51,25 @@ struct TransactionFiltersView: View {
 }
 
 #if DEBUG
-// MARK: - Preview Support
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-            .inject(MockDependencyContainer())
-    }
-}
-
-struct DashboardView_Previews: PreviewProvider {
-    static var previews: some View {
-        DashboardView()
-            .inject(MockDependencyContainer())
-    }
-}
-
-struct TransactionsView_Previews: PreviewProvider {
-    static var previews: some View {
-        TransactionsView()
-            .inject(MockDependencyContainer())
-    }
-}
+  // MARK: - Preview Support
+//  struct ContentView_Previews: PreviewProvider {
+//    static var previews: some View {
+//      ContentView()
+//        .inject(MockDependencyContainer())
+//    }
+//  }
+//
+//  struct DashboardView_Previews: PreviewProvider {
+//    static var previews: some View {
+//      DashboardView()
+//        .inject(MockDependencyContainer())
+//    }
+//  }
+//
+//  struct TransactionsView_Previews: PreviewProvider {
+//    static var previews: some View {
+//      TransactionsView()
+//        .inject(MockDependencyContainer())
+//    }
+//  }
 #endif

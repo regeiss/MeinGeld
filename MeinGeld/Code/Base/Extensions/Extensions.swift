@@ -24,9 +24,3 @@ extension Date {
   }
 }
 
-// MARK: - View Integration Helper
-extension View {
-  func inject(_ container: DependencyContainer) -> some View {
-    environment(\.dependencies, container)
-  }
-}

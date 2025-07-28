@@ -23,7 +23,7 @@ struct MainTabView: View {
           Text("Transações")
         }
 
-      AccountsView()
+      AccountView()
         .tabItem {
           Image(systemName: "creditcard.fill")
           Text("Contas")

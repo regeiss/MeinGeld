@@ -19,7 +19,7 @@ struct AccountsSummarySection: View {
 
           Spacer()
 
-          NavigationLink("Ver todas", destination: AccountsView())
+          NavigationLink("Ver todas", destination: AccountView())
             .font(.caption)
             .foregroundColor(.blue)
         }

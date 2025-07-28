@@ -21,11 +21,12 @@ final class DataService: DataServiceProtocol {
 
   // MARK: - Initialization
   init(
-    errorManager: ErrorManagerProtocol = ErrorManager.shared,
-    firebaseService: FirebaseServiceProtocol = FirebaseService.shared
+    errorManager: ErrorManagerProtocol? = nil,
+    firebaseService: FirebaseServiceProtocol? = nil
   ) throws {
-    self.errorManager = errorManager
-    self.firebaseService = firebaseService
+    // As MainActor, it's safe to access .shared here
+    self.errorManager = errorManager ?? ErrorManager.shared
+    self.firebaseService = firebaseService ?? FirebaseService.shared
 
     // Configura o formatter de data
     self.dateFormatter = DateFormatter()
@@ -51,12 +52,12 @@ final class DataService: DataServiceProtocol {
       )
       self.modelContext = modelContainer.mainContext
 
-      errorManager.logInfo(
+      errorManager?.logInfo(
         "DataService inicializado com sucesso",
         context: "DataService.init"
       )
     } catch {
-      errorManager.handle(error, context: "DataService.init")
+      errorManager?.handle(error, context: "DataService.init")
       throw DataServiceError.containerCreationFailed(error)
     }
   }
@@ -477,7 +478,7 @@ final class DataService: DataServiceProtocol {
 
       let descriptor = FetchDescriptor<Budget>(
         predicate: #Predicate<Budget> { budget in
-          budget.user.id == userID
+          budget.user?.id == userID
         },
         sortBy: [SortDescriptor(\.category)]
       )
@@ -502,10 +503,7 @@ final class DataService: DataServiceProtocol {
 
       let descriptor = FetchDescriptor<Budget>(
         predicate: #Predicate<Budget> { budget in
-          budget.category == targetCategory &&
-          budget.month == targetMonth &&
-          budget.year == targetYear &&
-          budget.user.id == userID
+          budget.category == targetCategory && budget.month == targetMonth && budget.year == targetYear && budget.user?.id == userID
         }
       )
       let budgets = try modelContext.fetch(descriptor)

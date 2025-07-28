@@ -36,7 +36,6 @@ struct PersonalFinanceApp: App {
   var body: some Scene {
     WindowGroup {
       ContentView()
-        .inject(container)
         .modelContainer(container.dataService.getModelContainer())
         .task {
           await setupApp()
@@ -117,3 +116,4 @@ struct PersonalFinanceApp: App {
 //        }
 //    }
 //}
+

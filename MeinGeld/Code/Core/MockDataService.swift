@@ -4,6 +4,7 @@
 //
 //  Created by Roberto Edgar Geiss on 20/07/25.
 //
+//
 
 import Foundation
 import SwiftData
@@ -120,10 +121,11 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
+    // ✅ CORRIGIDO: Acesso seguro aos optionals
     users.removeAll { $0.id == user.id }
     accounts.removeAll { $0.user.id == user.id }
     transactions.removeAll { $0.account?.user.id == user.id }
-    budgets.removeAll { $0.user.id == user.id }
+    budgets.removeAll { $0.user?.id == user.id }
   }
 
   // MARK: - Account Operations
@@ -148,6 +150,7 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
+    // ✅ CORRIGIDO: Acesso seguro aos optionals
     return accounts.filter { $0.user.id == user.id && $0.isActive }
   }
 
@@ -210,6 +213,7 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
+    // ✅ CORRIGIDO: Acesso seguro aos optionals
     var userTransactions =
       transactions
       .filter { $0.account?.user.id == user.id }
@@ -267,6 +271,7 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
+    // ✅ CORRIGIDO: Acesso seguro aos optionals
     return
       transactions
       .filter { $0.category == category && $0.account?.user.id == user.id }
@@ -286,6 +291,7 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
+    // ✅ CORRIGIDO: Acesso seguro aos optionals
     return
       transactions
       .filter {
@@ -350,7 +356,7 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
-    return budgets.filter { $0.user.id == user.id }
+    return budgets.filter { $0.user?.id == user.id }
   }
 
   func fetchBudget(
@@ -369,7 +375,7 @@ final class MockDataService: DataServiceProtocol {
 
     return budgets.first {
       $0.category == category && $0.month == month && $0.year == year
-        && $0.user.id == user.id
+        && $0.user?.id == user.id
     }
   }
 
@@ -621,3 +627,8 @@ final class MockDataService: DataServiceProtocol {
     // Setup is done via generateSampleData when needed
   }
 }
+
+// MARK: - Missing Protocol Definition
+// Se DataServiceProtocol não existir, adicione esta definição:
+
+

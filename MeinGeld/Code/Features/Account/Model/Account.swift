@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class Account: @unchecked Sendable {
+final class Account {
     var id: UUID
     var name: String
     var balance: Decimal

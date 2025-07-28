@@ -7,36 +7,56 @@
 import Foundation
 import SwiftData
 
-@MainActor
 @Observable
+@MainActor
 final class AccountViewModel {
+  private let repository: AccountRepositoryProtocol
+  private let authManager: AuthenticationManager
+  private let errorManager: ErrorManagerProtocol
 
-  // MARK: - Published Properties
   var accounts: [Account] = []
-  var totalBalance: Decimal = 0
   var isLoading = false
   var errorMessage: String?
 
-  // MARK: - Private Properties
-  private let dataService: DataServiceProtocol
-  private let authManager: any AuthenticationManagerProtocol
-  private let firebaseService: FirebaseServiceProtocol
+  // Computed properties
+  var totalBalance: Decimal {
+    accounts.reduce(0) { $0 + $1.balance }
+  }
 
-  // MARK: - Initialization
+  var checkingAccounts: [Account] {
+    accounts.filter { $0.accountType == .checking }
+  }
+
+  var savingsAccounts: [Account] {
+    accounts.filter { $0.accountType == .savings }
+  }
+
+  var creditAccounts: [Account] {
+    accounts.filter { $0.accountType == .credit }
+  }
+
+  var investmentAccounts: [Account] {
+    accounts.filter { $0.accountType == .investment }
+  }
+
   init(
-    dataService: DataServiceProtocol,
-    authManager: any AuthenticationManagerProtocol,
-    firebaseService: FirebaseServiceProtocol = FirebaseService.shared
+    repository: AccountRepositoryProtocol,
+    authManager: AuthenticationManager? = nil,
+    errorManager: ErrorManagerProtocol? = nil
   ) {
-    self.dataService = dataService
-    self.authManager = authManager
-    self.firebaseService = firebaseService
+    self.repository = repository
+    self.authManager = authManager ?? AuthenticationManager.shared
+    self.errorManager = errorManager ?? ErrorManager.shared
   }
 
   // MARK: - Public Methods
+
   func loadAccounts() async {
-    guard let user = authManager.currentUser else {
-      errorMessage = "Usuário não autenticado"
+    guard let currentUser = authManager.currentUser else {
+      errorManager.logWarning(
+        "Usuário não autenticado",
+        context: "AccountViewModel.loadAccounts"
+      )
       return
     }
 
@@ -44,15 +64,10 @@ final class AccountViewModel {
     errorMessage = nil
 
     do {
-      accounts = try await dataService.fetchAccounts(for: user)
-      totalBalance = try await dataService.fetchTotalBalance(for: user)
-
-      firebaseService.logEvent(.accountsViewed)
-
+      accounts = try await repository.fetchAccounts(for: currentUser.id)
     } catch {
       errorMessage = error.localizedDescription
-      accounts = []
-      totalBalance = 0
+      errorManager.handle(error, context: "AccountViewModel.loadAccounts")
     }
 
     isLoading = false
@@ -60,14 +75,17 @@ final class AccountViewModel {
 
   func createAccount(
     name: String,
-    accountType: AccountType,
-    initialBalance: Decimal = 0
-  ) async {
-    guard let user = authManager.currentUser,
-      !name.isEmpty
-    else {
-      errorMessage = "Dados inválidos"
-      return
+    initialBalance: Decimal,
+    accountType: AccountType
+  ) async -> Bool {
+    guard let currentUser = authManager.currentUser else {
+      errorMessage = "Usuário não encontrado"
+      return false
+    }
+
+    guard !name.isEmpty else {
+      errorMessage = "Nome da conta é obrigatório"
+      return false
     }
 
     isLoading = true
@@ -78,65 +96,94 @@ final class AccountViewModel {
         name: name,
         balance: initialBalance,
         accountType: accountType,
-        user: user
+        user: currentUser
       )
 
-      try await dataService.createAccount(account)
+      try await repository.createAccount(account)
+      await loadAccounts()  // Recarrega a lista
 
-      // Refresh accounts
-      await loadAccounts()
-
+      isLoading = false
+      return true
     } catch {
       errorMessage = error.localizedDescription
+      errorManager.handle(error, context: "AccountViewModel.createAccount")
+      isLoading = false
+      return false
     }
-
-    isLoading = false
   }
 
-  func updateAccount(_ account: Account) async {
+  func updateAccount(_ account: Account) async -> Bool {
     isLoading = true
     errorMessage = nil
 
     do {
-      try await dataService.updateAccount(account)
+      try await repository.updateAccount(account)
+      await loadAccounts()  // Recarrega a lista
 
-      // Update local array
-      if let index = accounts.firstIndex(where: { $0.id == account.id }) {
-        accounts[index] = account
-      }
-
-      // Recalculate total balance
-      if let user = authManager.currentUser {
-        totalBalance = try await dataService.fetchTotalBalance(for: user)
-      }
-
+      isLoading = false
+      return true
     } catch {
       errorMessage = error.localizedDescription
+      errorManager.handle(error, context: "AccountViewModel.updateAccount")
+      isLoading = false
+      return false
     }
-
-    isLoading = false
   }
 
-  func deleteAccount(_ account: Account) async {
+  func deleteAccount(_ account: Account) async -> Bool {
     isLoading = true
     errorMessage = nil
 
     do {
-      try await dataService.deleteAccount(account)
+      try await repository.deleteAccount(account)
+      await loadAccounts()  // Recarrega a lista
 
-      // Remove from local array
-      accounts.removeAll { $0.id == account.id }
-
-      // Recalculate total balance
-      if let user = authManager.currentUser {
-        totalBalance = try await dataService.fetchTotalBalance(for: user)
-      }
-
+      isLoading = false
+      return true
     } catch {
-      errorMessage = error.localizedDescription
+      if let appError = error as? AppError,
+        appError == .accountHasTransactions
+      {
+        errorMessage = "Não é possível deletar conta com transações"
+      } else {
+        errorMessage = error.localizedDescription
+      }
+      errorManager.handle(error, context: "AccountViewModel.deleteAccount")
+      isLoading = false
+      return false
     }
+  }
 
-    isLoading = false
+  func getAccount(by id: UUID) async -> Account? {
+    do {
+      return try await repository.fetchAccount(by: id)
+    } catch {
+      errorManager.handle(error, context: "AccountViewModel.getAccount")
+      return nil
+    }
+  }
+
+  func updateBalance(for account: Account, newBalance: Decimal) async -> Bool {
+    account.balance = newBalance
+    return await updateAccount(account)
+  }
+
+  // MARK: - Analytics Methods
+
+  func trackAccountViewed() {
+    FirebaseService.shared.logEvent(.accountsViewed)
+  }
+
+  func trackAccountInteraction(action: String, accountType: AccountType) {
+    FirebaseService.shared.logEvent(
+      AnalyticsEvent(
+        name: "account_interaction",
+        parameters: [
+          "action": action,
+          "account_type": accountType.rawValue,
+        ]
+      )
+    )
   }
 }
 

@@ -32,11 +32,15 @@ final class DashboardViewModel {
   init(
     dataService: DataServiceProtocol,
     authManager: any AuthenticationManagerProtocol,
-    firebaseService: FirebaseServiceProtocol = FirebaseService.shared
+    firebaseService: FirebaseServiceProtocol? = nil
   ) {
     self.dataService = dataService
     self.authManager = authManager
-    self.firebaseService = firebaseService
+    if let firebaseService = firebaseService {
+      self.firebaseService = firebaseService
+    } else {
+      self.firebaseService = FirebaseService.shared
+    }
   }
 
   // MARK: - Public Methods
@@ -120,3 +124,4 @@ final class DashboardViewModel {
     Array(accounts.prefix(3))
   }
 }
+

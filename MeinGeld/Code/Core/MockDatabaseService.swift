@@ -1,5 +1,5 @@
 //
-//  MockDatabaseService.swift
+//  MockFirebaseService.swift
 //  MeinGeld
 //
 //  Created by Roberto Edgar Geiss on 20/07/25.
