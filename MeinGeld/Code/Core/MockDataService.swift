@@ -373,9 +373,12 @@ final class MockDataService: DataServiceProtocol {
       )
     }
 
-    return budgets.first {
-      $0.category == category && $0.month == month && $0.year == year
-        && $0.user?.id == user.id
+    return budgets.first { budget in
+      let matchesCategory = budget.category == category.rawValue
+      let matchesMonth = budget.month == month
+      let matchesYear = budget.year == year
+      let matchesUser = budget.user?.id == user.id
+      return matchesCategory && matchesMonth && matchesYear && matchesUser
     }
   }
 
@@ -630,5 +633,4 @@ final class MockDataService: DataServiceProtocol {
 
 // MARK: - Missing Protocol Definition
 // Se DataServiceProtocol não existir, adicione esta definição:
-
 

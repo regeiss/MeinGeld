@@ -112,8 +112,7 @@ struct BudgetView: View {
   }
 
   @ViewBuilder
-  private func budgetContent(viewModel: BudgetViewModel) -> some View
-  {
+  private func budgetContent(viewModel: BudgetViewModel) -> some View {
     List {
       if viewModel.isLoading {
         ProgressView("Carregando orçamentos...")
@@ -127,7 +126,7 @@ struct BudgetView: View {
         // Lista de orçamentos
         Section("Orçamentos de \(monthYearText(viewModel: viewModel))") {
           ForEach(viewModel.currentMonthBudgets, id: \.id) { budget in
-            BudgetRowView(budget: budget, viewModel: viewModel)
+            BudgetRowView(budget: budget)
           }
           .onDelete { offsets in
             deleteBudgets(offsets: offsets, viewModel: viewModel)
@@ -155,102 +154,50 @@ struct BudgetView: View {
 }
 struct BudgetRowView: View {
   let budget: Budget
-  let viewModel: BudgetViewModel
 
   private var progressPercentage: Double {
     guard budget.limit > 0 else { return 0 }
-    return min((budget.spent / budget.limit).doubleValue, 1.0)
+    let spent = NSDecimalNumber(decimal: budget.spent)
+    let limit = NSDecimalNumber(decimal: budget.limit)
+    let percentage = spent.dividing(by: limit).doubleValue
+    return min(percentage, 1.0)
   }
 
   private var remainingAmount: Decimal {
     budget.limit - budget.spent
   }
 
-  private var progressColor: Color {
-    if progressPercentage >= 1.0 {
-      return .red
-    } else if progressPercentage >= 0.8 {
-      return .orange
-    } else {
-      return .green
-    }
-  }
-
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      // Header
+    VStack(alignment: .leading, spacing: 8) {
       HStack {
-        Label(
-          budget.category.displayName,
-          systemImage: budget.category.iconName
-        )
-        .font(.headline)
-        .foregroundColor(progressColor)
+        Label(budget.categoryDisplayName, systemImage: budget.categoryIconName)
+          .font(.headline)
 
         Spacer()
 
-        VStack(alignment: .trailing, spacing: 2) {
-          Text(budget.limit.formatted(.currency(code: "BRL")))
-            .font(.subheadline)
-            .fontWeight(.medium)
-
-          Text("Limite")
-            .font(.caption2)
-            .foregroundColor(.secondary)
-        }
+        Text(budget.limit.formatted(.currency(code: "BRL")))
+          .font(.subheadline)
+          .fontWeight(.medium)
       }
 
-      // Barra de progresso
-      VStack(alignment: .leading, spacing: 6) {
-        ProgressView(value: progressPercentage)
-          .progressViewStyle(LinearProgressViewStyle(tint: progressColor))
+      ProgressView(value: progressPercentage)
+        .progressViewStyle(
+          LinearProgressViewStyle(tint: progressPercentage > 0.8 ? .red : .blue)
+        )
 
-        HStack {
-          Text("Gasto: \(budget.spent.formatted(.currency(code: "BRL")))")
-            .font(.caption)
-            .foregroundColor(.secondary)
-
-          Spacer()
-
-          if remainingAmount >= 0 {
-            Text(
-              "Restante: \(remainingAmount.formatted(.currency(code: "BRL")))"
-            )
-            .font(.caption)
-            .foregroundColor(.green)
-          } else {
-            Text(
-              "Excesso: \((-remainingAmount).formatted(.currency(code: "BRL")))"
-            )
-            .font(.caption)
-            .foregroundColor(.red)
-          }
-        }
-      }
-
-      // Indicador de status
-      if progressPercentage >= 1.0 {
-        HStack {
-          Image(
-            systemName: progressPercentage > 1.0
-              ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
-          )
-          .foregroundColor(progressPercentage > 1.0 ? .red : .orange)
-
-          Text(
-            progressPercentage > 1.0
-              ? "Orçamento excedido" : "Orçamento esgotado"
-          )
+      HStack {
+        Text("Gasto: \(budget.spent.formatted(.currency(code: "BRL")))")
           .font(.caption)
-          .foregroundColor(progressPercentage > 1.0 ? .red : .orange)
-        }
+          .foregroundColor(.secondary)
+
+        Spacer()
+
+        Text("Restante: \(remainingAmount.formatted(.currency(code: "BRL")))")
+          .font(.caption)
+          .foregroundColor(remainingAmount >= 0 ? .green : .red)
       }
     }
     .padding(.vertical, 4)
-    .contentShape(Rectangle())
-    .onTapGesture {
-      viewModel.trackBudgetInteraction(action: "tap", category: budget.category)
-    }
   }
 }
 
@@ -330,4 +277,3 @@ struct BudgetSummarySection: View {
     }
   }
 }
-

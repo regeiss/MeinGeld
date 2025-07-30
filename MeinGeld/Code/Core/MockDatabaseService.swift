@@ -1,11 +1,10 @@
 //
-//  MockFirebaseService.swift
+//  MockDatabaseService.swift
 //  MeinGeld
 //
 //  Created by Roberto Edgar Geiss on 20/07/25.
 //
 
-import SwiftData
 //import Testing
 
 

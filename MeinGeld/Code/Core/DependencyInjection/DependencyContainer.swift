@@ -27,10 +27,7 @@ final class AppDependencyContainer: DependencyContainer {
     
     lazy var dataService: DataServiceProtocol = {
         do {
-            return try DataService(
-                errorManager: errorManager,
-                firebaseService: firebaseService
-            )
+            return try DataService()
         } catch {
             fatalError("Failed to initialize DataService: \(error)")
         }

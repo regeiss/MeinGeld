@@ -361,9 +361,9 @@ final class DataService: DataServiceProtocol {
       let targetCategory = category
 
       let descriptor = FetchDescriptor<Transaction>(
-        predicate: #Predicate<Transaction> { transaction in
-          transaction.category == targetCategory
-            && transaction.account?.user.id == userID
+        predicate: #Predicate<Transaction> {
+          $0.category == targetCategory &&
+          $0.account?.user.id == userID
         },
         sortBy: [SortDescriptor(\.date, order: .reverse)]
       )
@@ -386,9 +386,9 @@ final class DataService: DataServiceProtocol {
 
       // Quebrar em predicados menores se necessário
       let descriptor = FetchDescriptor<Transaction>(
-        predicate: #Predicate<Transaction> { transaction in
-          transaction.date >= start && transaction.date <= end
-            && transaction.account?.user.id == userID
+        predicate: #Predicate<Transaction> {
+          $0.date >= start && $0.date <= end &&
+          $0.account?.user.id == userID
         },
         sortBy: [SortDescriptor(\.date, order: .reverse)]
       )
@@ -456,14 +456,14 @@ final class DataService: DataServiceProtocol {
         AnalyticsEvent(
           name: "budget_created",
           parameters: [
-            "category": budget.category.rawValue,
+            "category": budget.category,
             "limit": budget.limit.doubleValue,
           ]
         )
       )
 
       errorManager.logInfo(
-        "Orçamento criado: \(budget.category.displayName)",
+        "Orçamento criado: \(budget.categoryDisplayName)",
         context: "DataService.createBudget"
       )
     } catch {
@@ -502,8 +502,11 @@ final class DataService: DataServiceProtocol {
       let targetYear = year
 
       let descriptor = FetchDescriptor<Budget>(
-        predicate: #Predicate<Budget> { budget in
-          budget.category == targetCategory && budget.month == targetMonth && budget.year == targetYear && budget.user?.id == userID
+        predicate: #Predicate<Budget> {
+          $0.category == targetCategory.rawValue &&
+          $0.month == targetMonth &&
+          $0.year == targetYear &&
+          $0.user?.id == userID
         }
       )
       let budgets = try modelContext.fetch(descriptor)
@@ -527,7 +530,7 @@ final class DataService: DataServiceProtocol {
       )
 
       errorManager.logInfo(
-        "Orçamento atualizado: \(budget.category.displayName)",
+        "Orçamento atualizado: \(budget.categoryDisplayName)",
         context: "DataService.updateBudget"
       )
     } catch {
@@ -550,7 +553,7 @@ final class DataService: DataServiceProtocol {
       )
 
       errorManager.logInfo(
-        "Orçamento deletado: \(budget.category.displayName)",
+        "Orçamento deletado: \(budget.categoryDisplayName)",
         context: "DataService.deleteBudget"
       )
     } catch {

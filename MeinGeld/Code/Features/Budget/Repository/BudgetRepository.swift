@@ -73,7 +73,9 @@ final class BudgetRepository: BudgetRepositoryProtocol {
     do {
       let capturedUserId = userId
       let descriptor = FetchDescriptor<Budget>(
-        predicate: #Predicate<Budget> { budget in budget.user?.id == capturedUserId },
+        predicate: #Predicate<Budget> { budget in
+          budget.user?.id == capturedUserId
+        },
         sortBy: [
           SortDescriptor(\.year, order: .reverse),
           SortDescriptor(\.month, order: .reverse),
@@ -116,8 +118,8 @@ final class BudgetRepository: BudgetRepositoryProtocol {
       let capturedMonth = month
       let capturedYear = year
       let descriptor = FetchDescriptor<Budget>(
-        predicate: #Predicate<Budget> {
-          budget in budget.user?.id == capturedUserId && budget.month == capturedMonth && budget.year == capturedYear
+        predicate: #Predicate<Budget> { budget in
+          budget.user?.id == capturedUserId && budget.month == capturedMonth && budget.year == capturedYear
         },
         sortBy: [SortDescriptor(\.category)]
       )
@@ -145,8 +147,12 @@ final class BudgetRepository: BudgetRepositoryProtocol {
       let capturedMonth = month
       let capturedYear = year
       let descriptor = FetchDescriptor<Budget>(
-        predicate: #Predicate<Budget> {
-          budget in budget.user?.id == capturedUserId && budget.categoryRawValue == capturedCategoryRaw && budget.month == capturedMonth && budget.year == capturedYear
+        predicate: #Predicate<Budget> { budget in
+          let matchesUser = budget.user?.id == capturedUserId
+          let matchesCategory = budget.category == capturedCategoryRaw
+          let matchesMonth = budget.month == capturedMonth
+          let matchesYear = budget.year == capturedYear
+          return matchesUser && matchesCategory && matchesMonth && matchesYear
         }
       )
       let budgets = try modelContext.fetch(descriptor)
@@ -166,15 +172,18 @@ final class BudgetRepository: BudgetRepositoryProtocol {
       guard let userId = budget.user?.id else {
         throw AppError.dataNotFound // Or another appropriate error
       }
+      guard let transactionCategory = TransactionCategory(rawValue: budget.category) else {
+        throw AppError.dataNotFound // Or another appropriate error
+      }
       // Verifica se já existe orçamento para essa categoria/mês/ano
       if let existingBudget = try await fetchBudget(
         for: userId,
-        category: budget.category,
+        category: transactionCategory,
         month: budget.month,
         year: budget.year
       ) {
         throw AppError.budgetAlreadyExists(
-          category: budget.category.displayName
+          category: transactionCategory.displayName
         )
       }
 
@@ -186,7 +195,7 @@ final class BudgetRepository: BudgetRepositoryProtocol {
         AnalyticsEvent(
           name: "budget_created",
           parameters: [
-            "category": budget.category.rawValue,
+            "category": transactionCategory.rawValue,
             "limit": budget.limit.doubleValue,
             "month": budget.month,
             "year": budget.year,
@@ -195,7 +204,7 @@ final class BudgetRepository: BudgetRepositoryProtocol {
       )
 
       errorManager.logInfo(
-        "Orçamento criado: \(budget.category.displayName) - \(budget.limit)",
+        "Orçamento criado: \(transactionCategory.displayName) - \(budget.limit)",
         context: "BudgetRepository.createBudget"
       )
     } catch {
@@ -213,7 +222,7 @@ final class BudgetRepository: BudgetRepositoryProtocol {
         AnalyticsEvent(
           name: "budget_updated",
           parameters: [
-            "category": budget.category.rawValue,
+            "category": TransactionCategory(rawValue: budget.category)?.rawValue ?? budget.category,
             "limit": budget.limit.doubleValue,
             "spent": budget.spent.doubleValue,
             "budget_id": budget.id.uuidString,
@@ -222,7 +231,7 @@ final class BudgetRepository: BudgetRepositoryProtocol {
       )
 
       errorManager.logInfo(
-        "Orçamento atualizado: \(budget.category.displayName)",
+        "Orçamento atualizado: \(TransactionCategory(rawValue: budget.category)?.displayName ?? budget.category)",
         context: "BudgetRepository.updateBudget"
       )
     } catch {
@@ -241,14 +250,14 @@ final class BudgetRepository: BudgetRepositoryProtocol {
         AnalyticsEvent(
           name: "budget_deleted",
           parameters: [
-            "category": budget.category.rawValue,
+            "category": TransactionCategory(rawValue: budget.category)?.rawValue ?? budget.category,
             "budget_id": budget.id.uuidString,
           ]
         )
       )
 
       errorManager.logInfo(
-        "Orçamento deletado: \(budget.category.displayName)",
+        "Orçamento deletado: \(TransactionCategory(rawValue: budget.category)?.displayName ?? budget.category)",
         context: "BudgetRepository.deleteBudget"
       )
     } catch {
@@ -272,7 +281,7 @@ final class BudgetRepository: BudgetRepositoryProtocol {
           AnalyticsEvent(
             name: "budget_exceeded",
             parameters: [
-              "category": budget.category.rawValue,
+              "category": TransactionCategory(rawValue: budget.category)?.rawValue ?? budget.category,
               "limit": budget.limit.doubleValue,
               "spent": newAmount.doubleValue,
               "excess": (newAmount - budget.limit).doubleValue,
@@ -352,8 +361,8 @@ final class BudgetRepository: BudgetRepositoryProtocol {
         budget: budget,
         alertType: newSpentAmount > budget.limit ? .exceeded : .danger,
         message: newSpentAmount > budget.limit
-          ? "Orçamento de \(budget.category.displayName) excedido!"
-          : "Orçamento de \(budget.category.displayName) esgotado!"
+          ? "Orçamento de \(TransactionCategory(rawValue: budget.category)?.displayName ?? budget.category) excedido!"
+          : "Orçamento de \(TransactionCategory(rawValue: budget.category)?.displayName ?? budget.category) esgotado!"
       )
     } else if utilizationPercentage >= 0.8 {
       let remaining = budget.limit - newSpentAmount
@@ -361,7 +370,7 @@ final class BudgetRepository: BudgetRepositoryProtocol {
         budget: budget,
         alertType: .warning,
         message:
-          "Atenção: Restam apenas \(remaining.formatted(.currency(code: "BRL"))) no orçamento de \(budget.category.displayName)"
+          "Atenção: Restam apenas \(remaining.formatted(.currency(code: "BRL"))) no orçamento de \(TransactionCategory(rawValue: budget.category)?.displayName ?? budget.category)"
       )
     }
 

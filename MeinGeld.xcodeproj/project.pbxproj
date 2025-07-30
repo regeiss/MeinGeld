@@ -52,9 +52,22 @@
 		E1217E402E2C517200AD8932 /* Estrutura.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Estrutura.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E154C1B92E3839C7001D0EFF /* Exceptions for "MeinGeld" folder in "MeinGeld" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E1217D4E2E2C500100AD8932 /* MeinGeld */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E1217D512E2C500100AD8932 /* MeinGeld */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E154C1B92E3839C7001D0EFF /* Exceptions for "MeinGeld" folder in "MeinGeld" target */,
+			);
 			path = MeinGeld;
 			sourceTree = "<group>";
 		};

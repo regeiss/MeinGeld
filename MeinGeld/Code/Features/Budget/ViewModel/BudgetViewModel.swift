@@ -42,9 +42,12 @@ final class BudgetViewModel {
   }
 
   var budgetsByCategory: [TransactionCategory: Budget] {
-    Dictionary(
-      uniqueKeysWithValues: currentMonthBudgets.map { ($0.category, $0) }
-    )
+    Dictionary(uniqueKeysWithValues: currentMonthBudgets.compactMap { budget in
+      guard let category = budget.category as? TransactionCategory ?? TransactionCategory(rawValue: (budget.category as? String) ?? "") else {
+        return nil
+      }
+      return (category, budget)
+    })
   }
 
   init(
@@ -266,3 +269,4 @@ final class BudgetViewModel {
     )
   }
 }
+

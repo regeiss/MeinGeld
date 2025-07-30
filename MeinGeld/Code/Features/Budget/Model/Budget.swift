@@ -10,22 +10,12 @@ import SwiftData
 @Model
 final class Budget {
   var id: UUID
-  var categoryRawValue: String  // Armazena como String para SwiftData
+  var category: String  // Manter como String para compatibilidade com SwiftData
   var limit: Decimal
   var spent: Decimal
   var month: Int
   var year: Int
   var user: User?
-
-  // Computed property para acessar como enum
-  var category: TransactionCategory {
-    get {
-      return TransactionCategory(rawValue: categoryRawValue) ?? .other
-    }
-    set {
-      categoryRawValue = newValue.rawValue
-    }
-  }
 
   init(
     id: UUID = UUID(),
@@ -37,7 +27,7 @@ final class Budget {
     user: User? = nil
   ) {
     self.id = id
-    self.categoryRawValue = category.rawValue
+    self.category = category.rawValue  // Armazena como String
     self.limit = limit
     self.spent = spent
     self.month = month
@@ -46,16 +36,24 @@ final class Budget {
   }
 }
 
-// MARK: - Migration Helper
-// Se você já tem dados, pode precisar migrar
-
+// MARK: - Helper Extensions
 extension Budget {
-  // Helper para buscar por categoria (se necessário)
-  static func predicate(for category: TransactionCategory) -> Predicate<Budget>
-  {
-    let categoryRaw = category.rawValue
-    return #Predicate<Budget> { budget in
-      budget.categoryRawValue == categoryRaw
-    }
+  // Propriedade computada para obter o enum
+  var categoryEnum: TransactionCategory {
+    return TransactionCategory(rawValue: category) ?? .other
+  }
+
+  // Método para atualizar a categoria
+  func updateCategory(_ newCategory: TransactionCategory) {
+    self.category = newCategory.rawValue
+  }
+
+  // Propriedades de conveniência
+  var categoryDisplayName: String {
+    return categoryEnum.displayName
+  }
+
+  var categoryIconName: String {
+    return categoryEnum.iconName
   }
 }
